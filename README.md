@@ -1,2 +1,2 @@
-# loopchain-db-analyzer
-Tool for analysing internal leveldb database of loopchain-based blockchains
+# Chainalytic Framework
+Framework for data aggregation and extending generic blockchain built-in RPC APIs
