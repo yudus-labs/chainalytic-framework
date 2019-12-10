@@ -1,0 +1,5 @@
+aggregator_endpoint: 'localhost:5500'
+warehouse_endpoint: 'localhost:5510'
+provider_endpoint: 'localhost:5520'
+warehouse_root: '.chainalytic_warehouse'
+storage_root: '{zone_id}_storage'  # E.g. "public-icon_storage"

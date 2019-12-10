@@ -1,0 +1,47 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"settings":
+	{
+		"LSP":
+		{
+			"pyls":
+			{
+				"command":
+				[
+					"./venv/bin/pyls"
+				],
+				"enabled": true,
+				"settings":
+				{
+					"pyls":
+					{
+						"plugins":
+						{
+							"mccabe":
+							{
+								"enabled": false
+							},
+							"pycodestyle":
+							{
+								"enabled": false
+							},
+							"pyflakes":
+							{
+								"enabled": false
+							},
+							"pylint":
+							{
+								"enabled": false
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
