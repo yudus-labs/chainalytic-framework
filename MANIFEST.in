@@ -1,0 +1,8 @@
+include LICENSE
+include VERSION
+include DEVELOPMENT.adoc
+include README.adoc
+include requirements.txt
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

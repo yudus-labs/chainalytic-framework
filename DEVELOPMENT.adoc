@@ -1,0 +1,20 @@
+#### Setup Sublime Text dev environment using `python-language-server`
+
+Create virtual env and source it +
+`python3.7 -m venv venv` +
+`source venv/bin/activate`
+
+Install extra `dev` dependence in `setup.py` +
+`pip install -e .[dev]`
+
+#### Config
+
+Package distribution & dev dependences are defined in `setup.py` +
+Testing config is defined in `tox.ini` and `MANIFEST.ini`
+
+#### Testing
+
+This project uses `tox` and `pytest` for automated test
+
+To run all tests, in current virtual env, run +
+`tox`
