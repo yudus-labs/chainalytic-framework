@@ -53,7 +53,7 @@ setup(
         '': 'src',
     },
     package_data={
-        '': ['*.txt', '*.rst', '*.md', '*.adoc', '*.yml']
+        '': ['**/*.yml']
     },
 
     classifiers=[

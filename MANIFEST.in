@@ -4,5 +4,7 @@ include DEVELOPMENT.adoc
 include README.adoc
 include requirements.txt
 
+graft src
+
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
