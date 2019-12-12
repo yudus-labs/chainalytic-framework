@@ -5,11 +5,19 @@
 There is a huge amount of data deep
 inside blockchains which could bring
 potential valuable insights. +
-This framework helps to easily extract, aggregate
-and generate new data using your own rule
-in a modular style.
 
-It comes with one built-in data aggregator for link:https://icon.foundation[ICON] public mainnet.
+*This framework helps to easily extract, aggregate
+and generate new data using your own rule
+in a modular style.*
+
+It targets developers who are interested in building application for
+
+- Blockchain analytic and insights
+- Monitoring tools
+- Data science, machine learning and AI
+- Algo trading
+
+I am also a big fan of link:https://icon.foundation[ICON], thus it comes with one built-in data aggregator for ICON public mainnet.
 
 ## Architecture
 
