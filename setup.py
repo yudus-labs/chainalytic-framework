@@ -6,10 +6,12 @@ deps = {
     'chainalytic': [
         'ruamel.yaml'
     ],
-    'test': [],
+    'test': [
+        'pytest',
+    ],
     'dev': [
         'python-language-server',
-        'tox'
+        'tox',
     ]
 }
 deps['dev'] = (
