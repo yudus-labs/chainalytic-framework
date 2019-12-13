@@ -6,9 +6,12 @@ There is a huge amount of data deep
 inside blockchains which could bring
 potential valuable insights. +
 
-*This framework helps to easily extract, aggregate
+*This framework focuses on _Realtime Blockchain Time-series Data Aggregation_. +
+It helps to easily extract, transform, aggregate
 and generate new data using your own rule
 in a modular style.*
+
+*Note*: it is *not* the tool that simply extracts chain data and dumps to big-data dataset (e.g. BigQuery)
 
 It targets developers who are interested in building application for
 
