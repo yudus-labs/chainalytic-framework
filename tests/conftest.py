@@ -11,7 +11,7 @@ def setup_chainalytic_config(request):
     cur_chainalytic_folder = config.CHAINALYTIC_FOLDER
     config.CHAINALYTIC_FOLDER = f'{config.CHAINALYTIC_FOLDER}_test'
 
-    cfg = config.generate_user_config()
+    cfg = config.init_user_config()
     print('Generated user config for testing')
     yield cfg
 

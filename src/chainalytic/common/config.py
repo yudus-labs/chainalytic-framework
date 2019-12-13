@@ -25,9 +25,11 @@ def get_working_dir():
     return _WORKING_DIR
 
 
-def generate_user_config(working_dir: str = get_working_dir()):
+def init_user_config(working_dir: str = get_working_dir()):
     default_config_dir = Path(working_dir, 'default_cfg')
     user_config_dir = Path(working_dir, CHAINALYTIC_FOLDER, CFG_FOLDER)
+
+    assert default_config_dir.exists(), 'Default config not found'
 
     def_registry_path = Path(default_config_dir, 'chain_registry.yml')
     user_registry_path = Path(user_config_dir, 'chain_registry.yml')
