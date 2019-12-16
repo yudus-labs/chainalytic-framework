@@ -12,6 +12,8 @@ deps = {
     'dev': [
         'python-language-server',
         'tox',
+        'pylint',
+        'autopep8',
     ]
 }
 deps['dev'] = (
