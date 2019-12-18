@@ -8,6 +8,13 @@
             "type": "shell",
             "command": "venv/bin/python chainalytic_hub_launcher.py",
             "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "label": "Run Dev",
+            "type": "shell",
+            "command": "venv/bin/python _tmp.py",
+            "problemMatcher": [],
             "group": {
                 "kind": "build",
                 "isDefault": true
