@@ -1,0 +1,126 @@
+import msgpack
+from pprint import pprint
+
+
+class Trie(list):
+    """
+    A simple trie for different kinds of state representation
+    """
+
+    ADDRESS_SIZE = 40
+    PREFIX = 'hx'
+
+    def __init__(self):
+        super().__init__()
+        self.extend([''] * 16)
+
+    def add_path(self, full_path: str):
+        """Add address full_path to `Trie`
+
+        Full path format: `<2_chars_prefix><address_body>:<arbitrary_value>`
+        """
+        path = full_path[len(Trie.PREFIX) :]
+
+        def walk(node: list, depth: int):
+            # print(f'Cur node: {node}')
+            # print(f'Depth: {depth}')
+            entry = int(path[depth], 16)
+            if isinstance(node[entry], list):
+                walk(node[entry], depth + 1)
+            elif isinstance(node[entry], (str, bytes)):
+                if depth + 1 == Trie.ADDRESS_SIZE:
+                    node[entry] = path[Trie.ADDRESS_SIZE + 1 :]
+                else:
+                    node[entry] = [''] * 16
+                    walk(node[entry], depth + 1)
+
+        walk(self, 0)
+
+    def ls_values(self, verbose=0):
+        """List all values associated with paths in Trie
+
+        Returns:
+            list: list of values
+        """
+        values = []
+
+        def walk(node: list, depth: int):
+            for c in node:
+                if isinstance(c, list):
+                    walk(c, depth + 1)
+                elif depth + 1 == Trie.ADDRESS_SIZE and c:
+                    values.append(c)
+
+        walk(self, 0)
+        if verbose:
+            print(f'Total values: {len(values)}')
+            pprint(values)
+        return values
+
+    def get_value(self, path: str):
+        """Find associated value of one specific path in Trie
+
+        Path format: `<2_chars_prefix><address_body>`
+        Return `None` if the path is not in trie
+        """
+        path = path[len(Trie.PREFIX) :]
+
+        def walk(node: list, depth: int):
+            entry = int(path[depth], 16)
+            if isinstance(node[entry], list):
+                return walk(node[entry], depth + 1)
+            elif depth + 1 == Trie.ADDRESS_SIZE and node:
+                return node[entry]
+
+        return walk(self, 0)
+
+    def ls_paths(self, skip_value=1, verbose=0):
+        """List all full paths in Trie
+
+        Returns:
+            list: list of paths
+        """
+        paths = []
+
+        def walk(node: list, depth: int, cur_path: str):
+            for i, c in enumerate(node):
+                if isinstance(c, list):
+                    walk(c, depth + 1, cur_path + hex(i)[2:])
+                elif depth + 1 == Trie.ADDRESS_SIZE and c:
+                    val = c.decode() if isinstance(c, bytes) else c
+                    val = '' if skip_value else ':' + val
+                    paths.append(f'{cur_path + hex(i)[2:]}{val}')
+
+        walk(self, 0, Trie.PREFIX)
+        if verbose:
+            print(f'Total paths: {len(paths)}')
+            pprint(paths)
+        return paths
+
+    def encode(self):
+        """Serialize the Trie using `MessagePack` protocol.
+
+        Returns:
+            bytes: encoded Trie
+        """
+        return msgpack.dumps(self)
+
+    def decode(self, encoded_trie: bytes):
+        """Deserialize and restore Trie from bytes encoded by `MessagePack`
+        """
+        unpacked_data = msgpack.loads(encoded_trie)
+        if len(unpacked_data) != 16:
+            raise Exception('Invalid encoded trie data')
+        for i, v in enumerate(unpacked_data):
+            self[i] = v
+
+    def render(self):
+        def walk(node: list, depth: int):
+            for i, c in enumerate(node):
+                if isinstance(c, list):
+                    print(f'{depth*"--"}{hex(i)[2:]}')
+                    walk(c, depth + 1)
+                elif isinstance(c, (str, bytes)) and c != '':
+                    print(f'{depth*"--"}{hex(i)[2:]}:{c}')
+
+        walk(self, 0)

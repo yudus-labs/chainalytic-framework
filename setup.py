@@ -4,22 +4,29 @@ from setuptools import setup, find_packages
 # All dependences
 deps = {
     'chainalytic': [
-        'ruamel.yaml'
+        'ruamel.yaml',
+        'msgpack',
+        'plyvel',
     ],
     'test': [
         'pytest',
+        'plyvel',
     ],
     'dev': [
         'python-language-server',
         'tox',
         'pylint',
         'autopep8',
+        'rope',
     ]
 }
 deps['dev'] = (
     deps['chainalytic'] +
-    deps['test'] +
     deps['dev']
+)
+deps['test'] = (
+    deps['chainalytic'] +
+    deps['test']
 )
 
 install_requires = deps['chainalytic']
