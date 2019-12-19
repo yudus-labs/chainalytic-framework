@@ -7,6 +7,9 @@ deps = {
         'ruamel.yaml',
         'msgpack',
         'plyvel',
+        'jsonrpcserver',
+        'jsonrpcclient[websockets]',
+        'websockets',
     ],
     'test': [
         'pytest',
@@ -18,6 +21,7 @@ deps = {
         'pylint',
         'autopep8',
         'rope',
+        'black',
     ]
 }
 deps['dev'] = (
