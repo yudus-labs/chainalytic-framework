@@ -1,6 +1,6 @@
-from chainalytic.hub import launcher
+from chainalytic.hub import Launcher
 
 
 def test_launcher():
-    ret = launcher.launch()
+    ret = Launcher().launch()
     assert ret == 1

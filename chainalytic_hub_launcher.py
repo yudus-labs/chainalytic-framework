@@ -1,4 +1,4 @@
-from chainalytic.hub import launcher
+from chainalytic.hub import Launcher
 
 if __name__ == '__main__':
-    launcher.launch()
+    Launcher().launch()
