@@ -10,3 +10,8 @@ class Launcher(object):
         self.hub.init_services()
         print('Launched Chainalytic Hub')
         return 1
+
+    def clean(self):
+        self.hub.cleanup_services()
+        print('Cleaned all Chainalytic Hub services')
+        return 1

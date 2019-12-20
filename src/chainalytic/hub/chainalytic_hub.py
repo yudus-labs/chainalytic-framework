@@ -1,12 +1,14 @@
 import sys
 import os
 import subprocess
+from subprocess import DEVNULL, STDOUT
 from chainalytic.common import config
 from chainalytic import (
     aggregator,
     warehouse,
     provider,
 )
+from chainalytic.common import rpc_client, rpc_server
 
 
 class ChainalyticHub(object):
@@ -25,7 +27,18 @@ class ChainalyticHub(object):
         self.warehouse_endpoint = config.get_setting()['warehouse_endpoint']
         self.provider_endpoint = config.get_setting()['provider_endpoint']
 
+    def cleanup_services(self):
+        for service in [
+            self.aggregator_endpoint,
+            self.warehouse_endpoint,
+            self.provider_endpoint,
+        ]:
+            r = rpc_client.call(service, call_id='exit')
+            if r['data'] == rpc_server.EXIT_SERVICE:
+                print(f'Cleaned service endpoint: {service}')
+
     def init_services(self):
+        self.cleanup_services()
         print('Initializing Chainalytic services...')
         python_exe = sys.executable
 
@@ -38,7 +51,7 @@ class ChainalyticHub(object):
             '--working_dir',
             os.getcwd(),
         ]
-        subprocess.Popen(aggregator_cmd)
+        subprocess.Popen(aggregator_cmd, stdout=DEVNULL, stderr=STDOUT)
         print(f'Run Aggregator service: {" ".join(aggregator_cmd)}')
 
         warehouse_cmd = [
@@ -50,7 +63,7 @@ class ChainalyticHub(object):
             '--working_dir',
             os.getcwd(),
         ]
-        subprocess.Popen(warehouse_cmd)
+        subprocess.Popen(warehouse_cmd, stdout=DEVNULL, stderr=STDOUT)
         print(f'Run Warehouse service: {" ".join(warehouse_cmd)}')
 
         provider_cmd = [
@@ -62,6 +75,6 @@ class ChainalyticHub(object):
             '--working_dir',
             os.getcwd(),
         ]
-        subprocess.Popen(provider_cmd)
+        subprocess.Popen(provider_cmd, stdout=DEVNULL, stderr=STDOUT)
         print(f'Run Provider service: {" ".join(provider_cmd)}')
         print('Initialized all services')

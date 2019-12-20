@@ -3,28 +3,31 @@ import argparse
 import websockets
 import asyncio
 import time
-from jsonrpcserver import method, async_dispatch as dispatch
+from jsonrpcserver import method
+from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher
 from . import Warehouse
 
 _WAREHOUSE = None
 
 
 @method
-async def _call(call_id: str, params: dict = None):
+async def _call(call_id: str, **kwargs):
+    params = kwargs
     print(f'Call: {call_id}')
     if call_id == 'ping':
         message = ''.join(
-            ['Pong !\nWarehouse service is running\n', f'Working dir: {_WAREHOUSE.working_dir}']
+            [
+                'Pong !\n',
+                'Warehouse service is running\n',
+                f'Working dir: {_WAREHOUSE.working_dir}\n',
+                f'Params: {params}',
+            ]
         )
         return message
+    elif call_id == 'exit':
+        return EXIT_SERVICE
     else:
         return f'Not implemented'
-
-
-async def _main(websocket, path):
-    response = await dispatch(await websocket.recv())
-    if response.wanted:
-        await websocket.send(str(response))
 
 
 def _run_server(endpoint, working_dir):
@@ -34,7 +37,7 @@ def _run_server(endpoint, working_dir):
 
     host = endpoint.split(':')[0]
     port = int(endpoint.split(':')[1])
-    start_server = websockets.serve(_main, host, port)
+    start_server = websockets.serve(main_dispatcher, host, port)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
     print('Initialized Warehouse')
