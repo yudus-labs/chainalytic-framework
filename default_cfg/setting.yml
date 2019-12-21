@@ -1,5 +1,12 @@
-aggregator_endpoint: 'localhost:5500'
-warehouse_endpoint: 'localhost:5510'
-provider_endpoint: 'localhost:5520'
-warehouse_root: '.chainalytic_warehouse'
-storage_root: '{zone_id}_storage'  # E.g. "public-icon_storage"
+upstream_endpoint: 'localhost:5500'
+aggregator_endpoint: 'localhost:5510'
+warehouse_endpoint: 'localhost:5520'
+provider_endpoint: 'localhost:5530'
+
+warehouse_dir: '.chainalytic/chainalytic_warehouse'
+
+# E.g. ".chainalytic/chainalytic_warehouse/public-icon_storage"
+zone_storage_dir: '{warehouse_dir}/{zone_id}_storage'
+
+# E.g. ".chainalytic/chainalytic_warehouse/public-icon_storage/unstaking_storage"
+transform_storage_dir: '{zone_storage_dir}/{transform_id}_storage'

@@ -1,10 +1,20 @@
+from typing import List, Set, Dict, Tuple, Optional
 import msgpack
 from pprint import pprint
 
 
 class Trie(list):
     """
-    A simple trie for different kinds of state representation
+    A simple trie (radix tree) for different kinds of state representation
+
+    Methods:
+        add_path(full_path: str)
+        ls_values(verbose=0) -> List[str]
+        get_value(path: str) -> Optional[str]
+        ls_paths(skip_value=1, verbose=0) -> List[str]
+        encode()-> bytes
+        decode(encoded_trie: bytes)
+        render()
     """
 
     ADDRESS_SIZE = 40
@@ -36,7 +46,7 @@ class Trie(list):
 
         walk(self, 0)
 
-    def ls_values(self, verbose=0):
+    def ls_values(self, verbose=0) -> List[str]:
         """List all values associated with paths in Trie
 
         Returns:
@@ -57,7 +67,7 @@ class Trie(list):
             pprint(values)
         return values
 
-    def get_value(self, path: str):
+    def get_value(self, path: str) -> Optional[str]:
         """Find associated value of one specific path in Trie
 
         Path format: `<2_chars_prefix><address_body>`
@@ -74,7 +84,7 @@ class Trie(list):
 
         return walk(self, 0)
 
-    def ls_paths(self, skip_value=1, verbose=0):
+    def ls_paths(self, skip_value=1, verbose=0) -> List[str]:
         """List all full paths in Trie
 
         Returns:
@@ -97,7 +107,7 @@ class Trie(list):
             pprint(paths)
         return paths
 
-    def encode(self):
+    def encode(self) -> bytes:
         """Serialize the Trie using `MessagePack` protocol.
 
         Returns:

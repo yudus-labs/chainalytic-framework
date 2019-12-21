@@ -1,3 +1,4 @@
+from typing import List, Set, Dict, Tuple, Optional
 import os
 from pathlib import Path
 import shutil
@@ -17,15 +18,11 @@ def set_working_dir(wd: str):
     _WORKING_DIR = wd
 
 
-def get_working_dir():
-    """
-    Returns:
-        str: working directory
-    """
+def get_working_dir() -> str:
     return _WORKING_DIR
 
 
-def init_user_config(working_dir: str = get_working_dir()):
+def init_user_config(working_dir: str = get_working_dir()) -> Dict[str, str]:
     default_config_dir = Path(working_dir, 'default_cfg')
     user_config_dir = Path(working_dir, CHAINALYTIC_FOLDER, CFG_FOLDER)
 
@@ -36,8 +33,7 @@ def init_user_config(working_dir: str = get_working_dir()):
     if def_registry_path.exists() and not user_registry_path.exists():
         user_registry_path.parent.mkdir(parents=1, exist_ok=1)
         shutil.copyfile(
-            def_registry_path.as_posix(),
-            user_registry_path.as_posix(),
+            def_registry_path.as_posix(), user_registry_path.as_posix(),
         )
 
     def_setting_path = Path(default_config_dir, 'setting.yml')
@@ -45,8 +41,7 @@ def init_user_config(working_dir: str = get_working_dir()):
     if def_setting_path.exists() and not user_setting_path.exists():
         user_setting_path.parent.mkdir(parents=1, exist_ok=1)
         shutil.copyfile(
-            def_setting_path.as_posix(),
-            user_setting_path.as_posix(),
+            def_setting_path.as_posix(), user_setting_path.as_posix(),
         )
 
     return {
@@ -60,7 +55,7 @@ def clean_user_config(working_dir: str = get_working_dir()):
     shutil.rmtree(user_config_dir.as_posix(), ignore_errors=1)
 
 
-def get_chain_registry(working_dir: str = get_working_dir()):
+def get_chain_registry(working_dir: str = get_working_dir()) -> Optional[Dict]:
     user_config_dir = Path(working_dir, CHAINALYTIC_FOLDER, CFG_FOLDER)
     user_registry_path = Path(user_config_dir, 'chain_registry.yml')
     data = None
@@ -73,7 +68,7 @@ def get_chain_registry(working_dir: str = get_working_dir()):
     return data
 
 
-def get_setting(working_dir: str = get_working_dir()):
+def get_setting(working_dir: str = get_working_dir()) -> Optional[Dict]:
     user_config_dir = Path(working_dir, CHAINALYTIC_FOLDER, CFG_FOLDER)
     user_setting_path = Path(user_config_dir, 'setting.yml')
     data = None
