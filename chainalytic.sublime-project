@@ -2,6 +2,18 @@
 	"folders":
 	[
 		{
+			"file_exclude_patterns":
+			[
+
+			],
+			"folder_exclude_patterns":
+			[
+				".chainalytic",
+				".tox*",
+				"venv*",
+				"_tmp",
+				".vscode"
+			],
 			"path": "."
 		}
 	],
