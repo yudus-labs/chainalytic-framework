@@ -23,12 +23,14 @@ class ChainalyticHub(object):
         self.working_dir = config.get_working_dir()
         config.init_user_config(self.working_dir)
 
+        self.upstream_endpoint = config.get_setting()['upstream_endpoint']
         self.aggregator_endpoint = config.get_setting()['aggregator_endpoint']
         self.warehouse_endpoint = config.get_setting()['warehouse_endpoint']
         self.provider_endpoint = config.get_setting()['provider_endpoint']
 
     def cleanup_services(self):
         for service in [
+            self.upstream_endpoint,
             self.aggregator_endpoint,
             self.warehouse_endpoint,
             self.provider_endpoint,
@@ -41,6 +43,18 @@ class ChainalyticHub(object):
         self.cleanup_services()
         print('Initializing Chainalytic services...')
         python_exe = sys.executable
+
+        upstream_cmd = [
+            python_exe,
+            '-m',
+            'chainalytic.upstream',
+            '--endpoint',
+            self.upstream_endpoint,
+            '--working_dir',
+            os.getcwd(),
+        ]
+        subprocess.Popen(upstream_cmd, stdout=DEVNULL, stderr=STDOUT)
+        print(f'Run Aggregator service: {" ".join(upstream_cmd)}')
 
         aggregator_cmd = [
             python_exe,
