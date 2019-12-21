@@ -18,3 +18,11 @@ This project uses `tox` and `pytest` for automated test
 
 To run all tests, in current virtual env, run +
 `tox`
+
+#### Run individual chainalytic services, assume you are in root directory of Git repo
+
+`venv/bin/python -m chainalytic.upstream --endpoint localhost:5500 --zone_id public-icon --working_dir .` +
+`venv/bin/python -m chainalytic.aggregator --endpoint localhost:5510 --zone_id public-icon --working_dir .` +
+`venv/bin/python -m chainalytic.warehouse --endpoint localhost:5520 --zone_id public-icon --working_dir .` +
+`venv/bin/python -m chainalytic.provider --endpoint localhost:5530 --zone_id public-icon --working_dir .`
+
