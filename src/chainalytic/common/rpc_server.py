@@ -9,6 +9,7 @@ async def main_dispatcher(websocket, path):
     response = await dispatch(await websocket.recv())
     if response.wanted:
         await websocket.send(str(response))
-        if response.result == EXIT_SERVICE:
-            print('Terminated service')
-            sys.exit()
+        if hasattr(response, 'result'):
+            if response.result == EXIT_SERVICE:
+                print('Terminated service')
+                sys.exit()

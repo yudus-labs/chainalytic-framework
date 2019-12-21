@@ -42,7 +42,7 @@ class BaseStorage(object):
             for tid in transforms
         }
 
-    async def put_block(self, height: int, data: Union[dict, bytes, str], transform_id: str) -> bool:
+    async def put_block(self, height: int, data: Union[dict, bytes, str, float, int], transform_id: str) -> bool:
         """Put block data to one specific transform storage.
         
         `last_block_height` value is also updated here

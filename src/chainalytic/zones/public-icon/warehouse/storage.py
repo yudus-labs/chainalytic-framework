@@ -7,11 +7,12 @@ from chainalytic.warehouse.storage import BaseStorage
 
 
 class Storage(BaseStorage):
+
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
 
     async def put_block(
-        self, height: int, data: Union[dict, bytes, str], transform_id: str
+        self, height: int, data: Union[dict, bytes, str, float, int], transform_id: str
     ) -> bool:
         """Put block data to one specific transform storage.
 
@@ -29,6 +30,8 @@ class Storage(BaseStorage):
                 value = json.dumps(data).encode()
             elif isinstance(data, str):
                 value = data.encode()
+            elif isinstance(data, (int, float)):
+                value = str(data).encode()
             else:
                 value = data
 
