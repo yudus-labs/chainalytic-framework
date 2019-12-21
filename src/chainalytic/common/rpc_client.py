@@ -9,7 +9,7 @@ SUCCEED_STATUS = 1
 FAILED_STATUS = 0
 
 
-async def _main(endpoint: str, **kwargs) -> Dict:
+async def call_async(endpoint: str, **kwargs) -> Dict:
     try:
         async with websockets.connect(f"ws://{endpoint}") as ws:
             r = await WebSocketsClient(ws).request("_call", **kwargs)
@@ -29,4 +29,4 @@ def call(endpoint: str, **kwargs) -> Dict:
     Returns:
         dict: {'status': bool, 'data': Any}
     """
-    return asyncio.get_event_loop().run_until_complete(_main(endpoint, **kwargs))
+    return asyncio.get_event_loop().run_until_complete(call_async(endpoint, **kwargs))
