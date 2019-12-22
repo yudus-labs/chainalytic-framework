@@ -21,3 +21,14 @@ class Collator(BaseCollator):
             return r['data']
         else:
             return None
+
+    async def last_block_height(self, transform_id: str) -> Optional[int]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='last_block_height',
+            transform_id=transform_id
+        )
+        if r['status'] and r['data']:
+            return r['data']
+        else:
+            return None

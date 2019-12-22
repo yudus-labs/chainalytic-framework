@@ -18,6 +18,7 @@ class BaseStorage(object):
         put_block(height: int, data: dict, transform_id: str) -> bool
         get_block(self, height: int, transform_id: str) -> Dict
         last_block_height(transform_id: str) -> int
+        set_last_block_height(height: int, transform_id: str) -> bool
 
     """
 
@@ -57,4 +58,8 @@ class BaseStorage(object):
 
     async def last_block_height(self, transform_id: str) -> int:
         """Get last block height in one specific transform storage."""
+        return 1
+
+    async def set_last_block_height(self, height: int, transform_id: str) -> bool:
+        """Set last block height in one specific transform storage."""
         return 1

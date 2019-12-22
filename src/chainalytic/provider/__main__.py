@@ -5,7 +5,7 @@ from chainalytic.common import rpc_client
 rpc_client.call(
     f'localhost:5530',
     call_id='api_call',
-    api_id='get_unstaking',
+    api_id='get_staking_info',
     api_params={'height': 999}
 )
 
