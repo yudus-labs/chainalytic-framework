@@ -1,4 +1,4 @@
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional, Union, Collection
 from pathlib import Path
 import json
 import plyvel
@@ -12,7 +12,7 @@ class Storage(BaseStorage):
         super(Storage, self).__init__(working_dir, zone_id)
 
     async def put_block(
-        self, height: int, data: Union[dict, bytes, str, float, int], transform_id: str
+        self, height: int, data: Union[Collection, bytes, str, float, int], transform_id: str
     ) -> bool:
         """Put block data to one specific transform storage.
 
@@ -28,12 +28,16 @@ class Storage(BaseStorage):
 
             if isinstance(data, dict):
                 value = json.dumps(data).encode()
+            elif isinstance(data, (list, tuple)):
+                value = str(data).encode()
             elif isinstance(data, str):
                 value = data.encode()
             elif isinstance(data, (int, float)):
                 value = str(data).encode()
-            else:
+            elif isinstance(data, bytes):
                 value = data
+            else:
+                return 0
 
             db.put(key, value)
             db.put(Storage.LAST_BLOCK_HEIGHT_KEY, key)

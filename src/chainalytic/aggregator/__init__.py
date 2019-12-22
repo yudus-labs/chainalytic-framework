@@ -1,12 +1,37 @@
-from . import data_feeder
+from typing import List, Set, Dict, Tuple, Optional, Any, Callable
 from . import kernel
 from . import transform
-from chainalytic.common import config
+from chainalytic.common import config, zone_manager
 
 
 class Aggregator(object):
-    def __init__(self, working_dir: str):
+    """
+    Properties:
+        working_dir (str):
+        zone_id (str):
+        setting (dict):
+        chain_registry (dict):
+        kernel (Kernel):
+        upstream_endpoint (str):
+        warehouse_endpoint (str):
+
+    """
+
+    def __init__(self, working_dir: str, zone_id: str):
         super(Aggregator, self).__init__()
+        self.working_dir = working_dir
+        self.zone_id = zone_id
         self.setting = config.get_setting(working_dir)
         self.chain_registry = config.get_chain_registry(working_dir)
-        self.working_dir = working_dir
+
+        mods = zone_manager.load_zone(self.zone_id)['aggregator']
+        self.kernel = mods['kernel'].Kernel(working_dir, zone_id)
+
+        for transform_id in mods['transform_registry']:
+            t = mods['transform_registry'][transform_id].Transform(
+                working_dir, zone_id, transform_id
+            )
+            self.kernel.add_transform(t)
+
+        self.upstream_endpoint = config.get_setting(working_dir)['upstream_endpoint']
+        self.warehouse_endpoint = config.get_setting(working_dir)['warehouse_endpoint']

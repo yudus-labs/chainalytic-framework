@@ -1,4 +1,4 @@
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional, Union, Collection
 from pathlib import Path
 from chainalytic.common import config, zone_manager
 
@@ -42,7 +42,9 @@ class BaseStorage(object):
             for tid in transforms
         }
 
-    async def put_block(self, height: int, data: Union[dict, bytes, str, float, int], transform_id: str) -> bool:
+    async def put_block(
+        self, height: int, data: Union[Collection, bytes, str, float, int], transform_id: str
+    ) -> bool:
         """Put block data to one specific transform storage.
         
         `last_block_height` value is also updated here
