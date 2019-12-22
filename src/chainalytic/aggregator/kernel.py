@@ -34,10 +34,12 @@ class BaseKernel(object):
         """
         if transform_id in self.transforms:
             output = await self.transforms[transform_id].execute(height, input_data)
+            if not output:
+                return 0
             r = await rpc_client.call_async(
                 self.warehouse_endpoint,
                 call_id='put_block',
-                height=height,
+                height=output['height'],
                 data=output['data'],
                 transform_id=transform_id,
             )

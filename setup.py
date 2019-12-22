@@ -10,6 +10,7 @@ deps = {
         'jsonrpcserver',
         'jsonrpcclient[websockets]',
         'websockets',
+        'iconservice'
     ],
     'test': [
         'pytest',

@@ -10,3 +10,5 @@ zone_storage_dir: '{warehouse_dir}/{zone_id}_storage'
 
 # E.g. ".chainalytic/chainalytic_warehouse/public-icon_storage/unstaking_storage"
 transform_storage_dir: '{zone_storage_dir}/{transform_id}_storage'
+
+transform_cache_dir: '{zone_storage_dir}/{transform_id}_cache'
