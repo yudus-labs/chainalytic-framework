@@ -19,14 +19,14 @@ def test_trie(setup_temp_db):
         valid_data[f'hx{p}'] = i
 
     # Save to leveldb
-    encoded_trie = t.encode()
+    encoded_trie = t.to_bytes()
     db.put(b'test', encoded_trie)
     db.close()
 
     # Load Trie from leveldb
     t = trie.Trie()
     db = plyvel.DB(db_path, create_if_missing=True)
-    t.decode(db.get(b'test'))
+    t.from_bytes(db.get(b'test'))
 
     # Test path and value
     paths = t.ls_paths(skip_value=1)

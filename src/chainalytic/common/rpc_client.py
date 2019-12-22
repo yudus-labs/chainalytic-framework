@@ -10,6 +10,17 @@ FAILED_STATUS = 0
 
 
 async def call_async(endpoint: str, **kwargs) -> Dict:
+    """Use this function to communicate with all Chainalytic services
+
+    Default service endpoints:
+        Upstream: localhost:5500
+        Aggregator: localhost:5510
+        Warehouse: localhost:5520
+        Provider: localhost:5530
+    
+    Returns:
+        dict: {'status': bool, 'data': Any}
+    """
     try:
         async with websockets.connect(f"ws://{endpoint}") as ws:
             r = await WebSocketsClient(ws).request("_call", **kwargs)
@@ -21,10 +32,13 @@ async def call_async(endpoint: str, **kwargs) -> Dict:
 def call(endpoint: str, **kwargs) -> Dict:
     """Use this function to communicate with all Chainalytic services
 
+    Synchronous version of `call_async()`
+
     Default service endpoints:
-        Aggregator: localhost:5500
-        Warehouse: localhost:5510
-        Provider: localhost:5520
+        Upstream: localhost:5500
+        Aggregator: localhost:5510
+        Warehouse: localhost:5520
+        Provider: localhost:5530
     
     Returns:
         dict: {'status': bool, 'data': Any}

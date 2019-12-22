@@ -12,8 +12,10 @@ class Trie(list):
         ls_values(verbose=0) -> List[str]
         get_value(path: str) -> Optional[str]
         ls_paths(skip_value=1, verbose=0) -> List[str]
-        encode()-> bytes
-        decode(encoded_trie: bytes)
+        to_bytes()-> bytes
+        from_bytes(encoded_trie: bytes)
+        to_hex()-> str
+        from_hex(encoded_trie: str)
         render()
     """
 
@@ -107,7 +109,7 @@ class Trie(list):
             pprint(paths)
         return paths
 
-    def encode(self) -> bytes:
+    def to_bytes(self) -> bytes:
         """Serialize the Trie using `MessagePack` protocol.
 
         Returns:
@@ -115,10 +117,28 @@ class Trie(list):
         """
         return msgpack.dumps(self)
 
-    def decode(self, encoded_trie: bytes):
+    def from_bytes(self, encoded_trie: bytes):
         """Deserialize and restore Trie from bytes encoded by `MessagePack`
         """
-        unpacked_data = msgpack.loads(encoded_trie)
+        try:
+            unpacked_data = msgpack.loads(encoded_trie)
+        except Exception:
+            raise Exception('Invalid encoded trie data')
+
+        if len(unpacked_data) != 16:
+            raise Exception('Invalid encoded trie data')
+        for i, v in enumerate(unpacked_data):
+            self[i] = v
+
+    def to_hex(self) -> str:
+        return self.to_bytes().hex()
+
+    def from_hex(self, encoded_trie: str):
+        try:
+            unpacked_data = msgpack.loads(bytes.fromhex(encoded_trie))
+        except Exception:
+            raise Exception('Invalid encoded trie data')
+
         if len(unpacked_data) != 16:
             raise Exception('Invalid encoded trie data')
         for i, v in enumerate(unpacked_data):
