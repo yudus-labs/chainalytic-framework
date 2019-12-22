@@ -17,7 +17,7 @@ import websockets
 import asyncio
 import time
 from jsonrpcserver import method
-from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher
+from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 from . import Provider
 
 _PROVIDER = None
@@ -26,7 +26,8 @@ _PROVIDER = None
 @method
 async def _call(call_id: str, **kwargs):
     params = kwargs
-    print(f'Call: {call_id}')
+    show_call_info(call_id, params)
+
     if call_id == 'ping':
         message = ''.join(
             [

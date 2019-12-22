@@ -49,9 +49,9 @@ class BaseStorage(object):
         """
         return 1
 
-    async def get_block(self, height: int, transform_id: str) -> Optional[Union[Dict, str]]:
+    async def get_block(self, height: int, transform_id: str) -> Optional[str]:
         """Get block data from one specific transform storage."""
-        return {}
+        return ''
 
     async def last_block_height(self, transform_id: str) -> int:
         """Get last block height in one specific transform storage."""

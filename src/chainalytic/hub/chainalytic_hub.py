@@ -56,18 +56,6 @@ class ChainalyticHub(object):
         subprocess.Popen(upstream_cmd, stdout=DEVNULL, stderr=STDOUT)
         print(f'Run Aggregator service: {" ".join(upstream_cmd)}')
 
-        aggregator_cmd = [
-            python_exe,
-            '-m',
-            'chainalytic.aggregator',
-            '--endpoint',
-            self.aggregator_endpoint,
-            '--working_dir',
-            os.getcwd(),
-        ]
-        subprocess.Popen(aggregator_cmd, stdout=DEVNULL, stderr=STDOUT)
-        print(f'Run Aggregator service: {" ".join(aggregator_cmd)}')
-
         warehouse_cmd = [
             python_exe,
             '-m',
@@ -79,6 +67,18 @@ class ChainalyticHub(object):
         ]
         subprocess.Popen(warehouse_cmd, stdout=DEVNULL, stderr=STDOUT)
         print(f'Run Warehouse service: {" ".join(warehouse_cmd)}')
+
+        aggregator_cmd = [
+            python_exe,
+            '-m',
+            'chainalytic.aggregator',
+            '--endpoint',
+            self.aggregator_endpoint,
+            '--working_dir',
+            os.getcwd(),
+        ]
+        subprocess.Popen(aggregator_cmd, stdout=DEVNULL, stderr=STDOUT)
+        print(f'Run Aggregator service: {" ".join(aggregator_cmd)}')
 
         provider_cmd = [
             python_exe,

@@ -5,6 +5,7 @@ from chainalytic.common import rpc_client
 rpc_client.call(f'localhost:5520', call_id='put_block', height=999, data={'cool': 'day'}, transform_id='unstaking')
 rpc_client.call(f'localhost:5520', call_id='get_block', height=999, transform_id='unstaking')
 rpc_client.call(f'localhost:5520', call_id='last_block_height', transform_id='unstaking')
+rpc_client.call(f'localhost:5520', call_id='set_last_block_height', height=999, transform_id='unstaking')
 
 """
 
@@ -13,8 +14,9 @@ import argparse
 import websockets
 import asyncio
 import time
+from pprint import pprint
 from jsonrpcserver import method
-from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher
+from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 from . import Warehouse
 
 _WAREHOUSE = None
@@ -23,7 +25,8 @@ _WAREHOUSE = None
 @method
 async def _call(call_id: str, **kwargs):
     params = kwargs
-    print(f'Call: {call_id}')
+    show_call_info(call_id, params)
+
     if call_id == 'ping':
         message = ''.join(
             [
@@ -48,6 +51,10 @@ async def _call(call_id: str, **kwargs):
     elif call_id == 'last_block_height':
         transform_id = params['transform_id']
         return await _WAREHOUSE.storage.last_block_height(transform_id)
+    elif call_id == 'set_last_block_height':
+        height = params['height']
+        transform_id = params['transform_id']
+        return await _WAREHOUSE.storage.set_last_block_height(height, transform_id)
     else:
         return f'Not implemented'
 

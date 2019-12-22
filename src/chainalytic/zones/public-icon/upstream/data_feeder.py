@@ -1,5 +1,6 @@
 from typing import List, Set, Dict, Tuple, Optional
 import json
+from pathlib import Path
 from chainalytic.common import config, zone_manager
 from chainalytic.upstream.data_feeder import BaseDataFeeder
 import plyvel
@@ -17,6 +18,9 @@ class DataFeeder(BaseDataFeeder):
         """Retrieve standard block data from chain
         """
         if self.chain_db_dir:
+            if not Path(self.chain_db_dir).exists():
+                return None
+
             db = plyvel.DB(self.chain_db_dir)
             block_hash = db.get(
                 BLOCK_HEIGHT_KEY +
@@ -24,7 +28,10 @@ class DataFeeder(BaseDataFeeder):
             )
             if not block_hash:
                 return None
-            block = json.loads(db.get(block_hash))
+            try:
+                block = json.loads(db.get(block_hash))
+            except Exception:
+                block = None
             db.close()
 
             return block
