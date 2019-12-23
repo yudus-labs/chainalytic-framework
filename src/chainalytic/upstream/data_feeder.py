@@ -1,4 +1,5 @@
 from typing import List, Set, Dict, Tuple, Optional, Collection
+import plyvel
 from chainalytic.common import config, zone_manager
 
 
@@ -11,6 +12,7 @@ class BaseDataFeeder(object):
         zone_id (str):
         client_endpoint (str):
         chain_db_dir (str):
+        chain_db (plyvel.DB):
     
     Methods:
         get_block(height: int) -> Optional[Dict]
@@ -24,6 +26,7 @@ class BaseDataFeeder(object):
         zone = zone_manager.get_zone(working_dir, zone_id)
         self.client_endpoint = zone['client_endpoint'] if zone else ''
         self.chain_db_dir = zone['chain_db_dir'] if zone else ''
+        self.chain_db = plyvel.DB(self.chain_db_dir)
 
     async def get_block(self, height: int) -> Optional[Collection]:
         """Retrieve standard block data from chain

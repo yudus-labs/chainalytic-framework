@@ -1,5 +1,7 @@
 from typing import List, Set, Dict, Tuple, Optional, Union, Collection
 from pathlib import Path
+from pprint import pprint
+import plyvel
 from chainalytic.common import config, zone_manager
 
 
@@ -13,6 +15,7 @@ class BaseStorage(object):
         warehouse_dir (str):
         zone_storage_dir (str):
         transform_storage_dirs (dict):
+        transform_storage_dbs (dict):
     
     Methods:
         put_block(height: int, data: dict, transform_id: str) -> bool
@@ -40,6 +43,14 @@ class BaseStorage(object):
             tid: setting['transform_storage_dir'].format(
                 zone_storage_dir=self.zone_storage_dir, transform_id=tid
             )
+            for tid in transforms
+        }
+
+        # Setup storage DB for all transforms
+        for p in self.transform_storage_dirs.values():
+            Path(p).parent.mkdir(parents=1, exist_ok=1)
+        self.transform_storage_dbs = {
+            tid: plyvel.DB(self.transform_storage_dirs[tid], create_if_missing=True)
             for tid in transforms
         }
 

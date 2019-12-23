@@ -3,7 +3,7 @@ import sys
 import argparse
 import websockets
 import asyncio
-import time
+from time import time
 from jsonrpcserver import method
 from jsonrpcclient.clients.websockets_client import WebSocketsClient
 from chainalytic.common import config, rpc_client
@@ -59,8 +59,10 @@ async def fetch_data():
     warehouse_endpoint = _AGGREGATOR.warehouse_endpoint
 
     while 1:
+        print('New aggregation')
+        t1 = time()
         for tid in _AGGREGATOR.kernel.transforms:
-            print('Trying to fetch data...')
+            print('--Trying to fetch data...')
             print(f'----For transform: {tid}')
             print(f'----From Upstream: {upstream_endpoint}')
 
@@ -75,16 +77,20 @@ async def fetch_data():
                     upstream_endpoint, call_id='get_block', height=next_block_height
                 )
                 if upstream_response['status'] and upstream_response['data'] is not None:
-                    print('Fetched data successfully')
-                    print(f'Next block height: {next_block_height}')
-                    print('Preparing to execute next block...')
+                    print('--Fetched data successfully')
+                    print(f'--Next block height: {next_block_height}')
+                    print('--Preparing to execute next block...')
                     await _AGGREGATOR.kernel.execute(
                         height=next_block_height,
                         input_data=upstream_response['data'],
                         transform_id=tid,
                     )
-                    print(f'Executed block "{next_block_height}" successfully')
-            print()
+                    print(f'--Executed block "{next_block_height}" successfully')
+            print('--')
+        agg_time = round(time() - t1, 4)
+        print(f'Total aggregation time: {agg_time}s')
+        print(f'Estimated aggregation speed: {int(1/agg_time)} blocks/s')
+        print('')
 
 
 def _run_server(endpoint, working_dir, zone_id):

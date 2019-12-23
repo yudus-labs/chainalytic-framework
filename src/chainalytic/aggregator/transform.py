@@ -1,5 +1,6 @@
 from typing import List, Set, Dict, Tuple, Optional, Any, Callable
 from pathlib import Path
+import plyvel
 from chainalytic.common import config
 
 
@@ -15,6 +16,7 @@ class BaseTransform(object):
         kernel (Kernel):
         transform_storage_dir (str):
         transform_cache_dir (str):
+        transform_cache_db (plyvel.DB):
 
     Methods:
         execute(height: int, input_data: Dict) -> Dict
@@ -41,6 +43,9 @@ class BaseTransform(object):
         self.transform_cache_dir = setting['transform_cache_dir'].format(
             zone_storage_dir=zone_storage_dir, transform_id=transform_id
         )
+
+        Path(self.transform_cache_dir).parent.mkdir(parents=1, exist_ok=1)
+        self.transform_cache_db = plyvel.DB(self.transform_cache_dir, create_if_missing=True)
 
     def set_kernel(self, kernel: 'Kernel'):
         self.kernel = kernel

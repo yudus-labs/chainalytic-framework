@@ -1,5 +1,7 @@
 from typing import List, Set, Dict, Tuple, Optional
 import json
+from time import time
+from pprint import pprint
 from pathlib import Path
 from chainalytic.common import config, zone_manager
 from chainalytic.upstream.data_feeder import BaseDataFeeder
@@ -14,32 +16,71 @@ V3_BLOCK_HEIGHT = 10324749
 
 
 class DataFeeder(BaseDataFeeder):
-
     def __init__(self, working_dir: str, zone_id: str):
         super(DataFeeder, self).__init__(working_dir, zone_id)
 
-    async def get_block(self, height: int) -> Optional[list]:
+    async def get_block(self, height: int, verbose: bool = 1) -> Optional[dict]:
         """Retrieve standard block data from chain
         """
+        if verbose:
+            print(f'Feeding block: {height}')
+
         if self.chain_db_dir:
             if not Path(self.chain_db_dir).exists():
                 return None
 
-            db = plyvel.DB(self.chain_db_dir)
+            t1 = time()
+
+            db = self.chain_db
+            if verbose:
+                print(f'--Time to init leveldb: {round(time() - t1, 4)}s')
+
+            t11 = time()
             block_hash = db.get(
-                BLOCK_HEIGHT_KEY +
-                height.to_bytes(BLOCK_HEIGHT_BYTES_LEN, byteorder='big')
+                BLOCK_HEIGHT_KEY + height.to_bytes(BLOCK_HEIGHT_BYTES_LEN, byteorder='big')
             )
+            if verbose:
+                print(f'--Time to find block hash: {round(time() - t11, 4)}s')
+
             if not block_hash:
                 return None
             try:
-                block = json.loads(db.get(block_hash))
+                t2 = time()
+                data = db.get(block_hash)
+                if verbose:
+                    print(f'--Time to load block from leveldb: {round(time() - t2, 4)}s')
+
+                t3 = time()
+                block = json.loads(data)
+                if verbose:
+                    print(f'--Time to convert data: {round(time() - t3, 4)}s')
+
                 if height < V3_BLOCK_HEIGHT:
                     txs = block['confirmed_transaction_list']
                 else:
                     txs = block['transactions']
             except Exception:
-                txs = None
-            db.close()
+                # db.close()
+                return None
 
-            return txs
+            # db.close()
+            if verbose:
+                print(f'Total time to load data: {round(time() - t1, 4)}s')
+
+            t4 = time()
+            set_stake_wallets = {}
+            for tx in txs:
+                if 'data' not in tx:
+                    continue
+                if 'method' not in tx['data']:
+                    continue
+                if tx['data']['method'] == 'setStake':
+                    stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
+                    set_stake_wallets[tx["from"]] = stake_value
+            if verbose:
+                print(f'Time to pre-process data: {round(time() - t4, 4)}s')
+
+                print(f'Total feeding time: {round(time() - t1, 4)}s')
+                print()
+
+            return set_stake_wallets
