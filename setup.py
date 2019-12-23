@@ -9,7 +9,9 @@ deps = {
         'plyvel',
         'jsonrpcserver',
         'jsonrpcclient[websockets]',
+        'jsonrpcclient[requests]',
         'websockets',
+        'aiohttp',
         'iconservice'
     ],
     'test': [

@@ -6,7 +6,13 @@ rpc_client.call(
     f'localhost:5530',
     call_id='api_call',
     api_id='get_staking_info',
-    api_params={'height': 999}
+    api_params={'height': 999999}
+)
+rpc_client.call(
+    f'localhost:5530',
+    call_id='api_call',
+    api_id='last_block_height',
+    api_params={'transform_id': 'stake_history'}
 )
 
 """
@@ -16,7 +22,9 @@ import argparse
 import websockets
 import asyncio
 import time
-from jsonrpcserver import method
+from aiohttp import web
+from jsonrpcserver import method, async_dispatch as dispatch
+
 from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 from . import Provider
 
@@ -48,6 +56,21 @@ async def _call(call_id: str, **kwargs):
         return f'Not implemented'
 
 
+# websockets transfer protocol
+# def _run_server(endpoint, working_dir, zone_id):
+#     global _PROVIDER
+#     _PROVIDER = Provider(working_dir, zone_id)
+#     print(f'Provider endpoint: {endpoint}')
+#     print(f'Provider zone ID: {zone_id}')
+
+#     host = endpoint.split(':')[0]
+#     port = int(endpoint.split(':')[1])
+#     start_server = websockets.serve(main_dispatcher, host, port)
+#     asyncio.get_event_loop().run_until_complete(start_server)
+#     asyncio.get_event_loop().run_forever()
+#     print('Initialized Provider')
+
+# aiohttp transfer protocol
 def _run_server(endpoint, working_dir, zone_id):
     global _PROVIDER
     _PROVIDER = Provider(working_dir, zone_id)
@@ -56,9 +79,19 @@ def _run_server(endpoint, working_dir, zone_id):
 
     host = endpoint.split(':')[0]
     port = int(endpoint.split(':')[1])
-    start_server = websockets.serve(main_dispatcher, host, port)
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
+
+    async def handle(request):
+        request = await request.text()
+        response = await dispatch(request)
+        if response.wanted:
+            return web.json_response(response.deserialized(), status=response.http_status)
+        else:
+            return web.Response()
+
+    app = web.Application()
+    app.router.add_post("/", handle)
+    web.run_app(app, port=port)
+
     print('Initialized Provider')
 
 
