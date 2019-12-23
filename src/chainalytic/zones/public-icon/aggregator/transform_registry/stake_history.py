@@ -80,7 +80,7 @@ class Transform(BaseTransform):
             unstaking_addresses = json.loads(unstaking_addresses)
         else:
             unstaking_addresses = {}
-        for addr in unstaking_addresses.keys():
+        for addr in list(unstaking_addresses):
             if unstaking_addresses[addr] <= height:
                 unstaking_addresses.pop(addr)
 
