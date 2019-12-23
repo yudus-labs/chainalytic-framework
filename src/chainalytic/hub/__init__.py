@@ -9,6 +9,7 @@ class Launcher(object):
     def launch(self):
         self.hub.init_services()
         print('Launched Chainalytic Hub')
+        self.hub.monitor()
         return 1
 
     def clean(self):
