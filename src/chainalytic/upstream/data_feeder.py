@@ -1,4 +1,4 @@
-from typing import List, Set, Dict, Tuple, Optional
+from typing import List, Set, Dict, Tuple, Optional, Collection
 from chainalytic.common import config, zone_manager
 
 
@@ -25,7 +25,7 @@ class BaseDataFeeder(object):
         self.client_endpoint = zone['client_endpoint'] if zone else ''
         self.chain_db_dir = zone['chain_db_dir'] if zone else ''
 
-    async def get_block(self, height: int) -> Optional[Dict]:
+    async def get_block(self, height: int) -> Optional[Collection]:
         """Retrieve standard block data from chain
         """
         block = {}

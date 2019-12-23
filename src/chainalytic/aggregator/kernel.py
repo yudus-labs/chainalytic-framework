@@ -10,6 +10,7 @@ class BaseKernel(object):
         working_dir (str):
         zone_id (str):
         transforms (dict):
+        chain_registry (dict):
         warehouse_endpoint (str):
 
     Methods:
@@ -22,6 +23,7 @@ class BaseKernel(object):
         self.working_dir = working_dir
         self.zone_id = zone_id
         self.transforms = {}
+        self.chain_registry = config.get_chain_registry(working_dir)
 
         self.warehouse_endpoint = config.get_setting(working_dir)['warehouse_endpoint']
 

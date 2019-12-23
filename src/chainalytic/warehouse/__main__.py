@@ -2,10 +2,10 @@
 Sample service calls
 
 from chainalytic.common import rpc_client
-rpc_client.call(f'localhost:5520', call_id='put_block', height=999, data={'cool': 'day'}, transform_id='unstaking')
-rpc_client.call(f'localhost:5520', call_id='get_block', height=999, transform_id='unstaking')
-rpc_client.call(f'localhost:5520', call_id='last_block_height', transform_id='unstaking')
-rpc_client.call(f'localhost:5520', call_id='set_last_block_height', height=999, transform_id='unstaking')
+rpc_client.call(f'localhost:5520', call_id='put_block', height=999, data={'cool': 'day'}, transform_id='stake_history')
+rpc_client.call(f'localhost:5520', call_id='get_block', height=999, transform_id='stake_history')
+rpc_client.call(f'localhost:5520', call_id='last_block_height', transform_id='stake_history')
+rpc_client.call(f'localhost:5520', call_id='set_last_block_height', height=999, transform_id='stake_history')
 
 """
 

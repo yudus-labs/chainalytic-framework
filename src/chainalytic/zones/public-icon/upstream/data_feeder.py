@@ -8,13 +8,17 @@ import plyvel
 BLOCK_HEIGHT_KEY = b'block_height_key'
 BLOCK_HEIGHT_BYTES_LEN = 12
 
+FIRST_STAKE_BLOCK_HEIGHT = 7597365
+START_BLOCK_HEIGHT = FIRST_STAKE_BLOCK_HEIGHT - 1
+V3_BLOCK_HEIGHT = 10324749
+
 
 class DataFeeder(BaseDataFeeder):
 
     def __init__(self, working_dir: str, zone_id: str):
         super(DataFeeder, self).__init__(working_dir, zone_id)
 
-    async def get_block(self, height: int) -> Optional[Dict]:
+    async def get_block(self, height: int) -> Optional[list]:
         """Retrieve standard block data from chain
         """
         if self.chain_db_dir:
@@ -30,8 +34,12 @@ class DataFeeder(BaseDataFeeder):
                 return None
             try:
                 block = json.loads(db.get(block_hash))
+                if height < V3_BLOCK_HEIGHT:
+                    txs = block['confirmed_transaction_list']
+                else:
+                    txs = block['transactions']
             except Exception:
-                block = None
+                txs = None
             db.close()
 
-            return block
+            return txs

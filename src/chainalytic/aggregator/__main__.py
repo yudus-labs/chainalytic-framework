@@ -74,7 +74,7 @@ async def fetch_data():
                 upstream_response = await rpc_client.call_async(
                     upstream_endpoint, call_id='get_block', height=next_block_height
                 )
-                if upstream_response['status'] and upstream_response['data']:
+                if upstream_response['status'] and upstream_response['data'] is not None:
                     print('Fetched data successfully')
                     print(f'Next block height: {next_block_height}')
                     print('Preparing to execute next block...')
