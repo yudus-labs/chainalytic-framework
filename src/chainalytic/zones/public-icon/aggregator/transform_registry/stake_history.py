@@ -23,10 +23,10 @@ def unlock_period(total_stake, total_supply):
 
 
 class Transform(BaseTransform):
-    PREV_STATE_HEIGHT_KEY = b'prev_state_height'
-    PREV_TOTAL_STAKING_KEY = b'prev_total_staking'
-    PREV_TOTAL_UNSTAKING_KEY = b'prev_total_unstaking'
-    PREV_TOTAL_STAKING_WALLETS_KEY = b'prev_total_staking_wallets'
+    LAST_STATE_HEIGHT_KEY = b'last_state_height'
+    LAST_TOTAL_STAKING_KEY = b'last_total_staking'
+    LAST_TOTAL_UNSTAKING_KEY = b'last_total_unstaking'
+    LAST_TOTAL_STAKING_WALLETS_KEY = b'last_total_staking_wallets'
 
     def __init__(self, working_dir: str, zone_id: str, transform_id: str):
         super(Transform, self).__init__(working_dir, zone_id, transform_id)
@@ -41,9 +41,10 @@ class Transform(BaseTransform):
 
         # Load transform cache to retrive previous staking state
         cache_db = self.transform_cache_db
+        cache_db_batch = self.transform_cache_db.write_batch()
 
         # Make sure input block data represents for the next block of previous state cache
-        prev_state_height = cache_db.get(Transform.PREV_STATE_HEIGHT_KEY)
+        prev_state_height = cache_db.get(Transform.LAST_STATE_HEIGHT_KEY)
         if prev_state_height:
             prev_state_height = int(prev_state_height)
             if prev_state_height != height - 1:
@@ -59,9 +60,9 @@ class Transform(BaseTransform):
 
         # Read data of previous block from cache
         #
-        prev_total_staking = cache_db.get(Transform.PREV_TOTAL_STAKING_KEY)
-        prev_total_unstaking = cache_db.get(Transform.PREV_TOTAL_UNSTAKING_KEY)
-        prev_total_staking_wallets = cache_db.get(Transform.PREV_TOTAL_STAKING_WALLETS_KEY)
+        prev_total_staking = cache_db.get(Transform.LAST_TOTAL_STAKING_KEY)
+        prev_total_unstaking = cache_db.get(Transform.LAST_TOTAL_UNSTAKING_KEY)
+        prev_total_staking_wallets = cache_db.get(Transform.LAST_TOTAL_STAKING_WALLETS_KEY)
 
         prev_total_staking = float(prev_total_staking) if prev_total_staking else 0
         prev_total_unstaking = float(prev_total_unstaking) if prev_total_unstaking else 0
@@ -87,9 +88,9 @@ class Transform(BaseTransform):
                 addr_data = cache_db.get(addr.encode())
                 stake_value, unstaking_value, unlock_height = addr_data.split(b':')
                 stake_value = float(stake_value)
-                cache_db.put(addr.encode(), f'{stake_value}:0:0'.encode())
+                cache_db_batch.put(addr.encode(), f'{stake_value}:0:0'.encode())
 
-        cache_db.put(b'unstaking', json.dumps(unstaking_addresses).encode())
+        cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
 
         # Calculate staking, unstaking and unlock_height for each wallet
         # and put them to transform cache
@@ -139,7 +140,7 @@ class Transform(BaseTransform):
                 cur_unstaking_value = 0
                 unlock_height = 0
 
-            cache_db.put(
+            cache_db_batch.put(
                 addr.encode(), f'{cur_stake_value}:{cur_unstaking_value}:{unlock_height}'.encode()
             )
 
@@ -151,16 +152,17 @@ class Transform(BaseTransform):
                 else:
                     unstaking_addresses = {}
                 unstaking_addresses[addr] = unlock_height
-                cache_db.put(b'unstaking', json.dumps(unstaking_addresses).encode())
+                cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
 
             # Update total staking and unstaking
             total_staking = total_staking - prev_stake_value + cur_stake_value
             total_unstaking = total_unstaking - prev_unstaking_value + cur_unstaking_value
 
-        cache_db.put(Transform.PREV_STATE_HEIGHT_KEY, str(height).encode())
-        cache_db.put(Transform.PREV_TOTAL_STAKING_KEY, str(total_staking).encode())
-        cache_db.put(Transform.PREV_TOTAL_UNSTAKING_KEY, str(total_unstaking).encode())
-        cache_db.put(Transform.PREV_TOTAL_STAKING_WALLETS_KEY, str(total_staking_wallets).encode())
+        cache_db_batch.put(Transform.LAST_STATE_HEIGHT_KEY, str(height).encode())
+        cache_db_batch.put(Transform.LAST_TOTAL_STAKING_KEY, str(total_staking).encode())
+        cache_db_batch.put(Transform.LAST_TOTAL_UNSTAKING_KEY, str(total_unstaking).encode())
+        cache_db_batch.put(Transform.LAST_TOTAL_STAKING_WALLETS_KEY, str(total_staking_wallets).encode())
+        cache_db_batch.write()
 
         execution_time = f'{round(time.time()-start_time, 4)}s'
 
