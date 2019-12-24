@@ -9,10 +9,13 @@ from subprocess import DEVNULL, STDOUT
 from chainalytic.common import rpc_client, rpc_server, config
 from jsonrpcclient.clients.http_client import HTTPClient
 
+C = 'CONNECTED'
+D = 'DISCONNECTED'
 
-class ChainalyticHub(object):
+
+class Console(object):
     """
-    Main hub
+    Main console for managing Chainalytic services
 
     Properties:
         working_dir (str):
@@ -29,8 +32,8 @@ class ChainalyticHub(object):
     """
 
     def __init__(self, working_dir: Optional[str] = None):
-        super(ChainalyticHub, self).__init__()
-        print('Starting Chainalytic Hub...')
+        super(Console, self).__init__()
+        print('Starting Chainalytic console...')
 
         if not working_dir:
             config.set_working_dir(os.getcwd())
@@ -54,10 +57,12 @@ class ChainalyticHub(object):
             r = rpc_client.call(service, call_id='exit')
             if r['data'] == rpc_server.EXIT_SERVICE:
                 print(f'Cleaned service endpoint: {service}')
+        print('Cleaned all Chainalytic services')
 
     def init_services(self, force_restart: bool = 0):
         if force_restart:
             self.cleanup_services()
+
         print('Initializing Chainalytic services...')
         python_exe = sys.executable
 
@@ -124,10 +129,10 @@ class ChainalyticHub(object):
             subprocess.Popen(provider_cmd, stdout=DEVNULL, stderr=STDOUT)
             print(f'Started Provider service: {" ".join(provider_cmd)}')
             print()
-            print('Initialized all services')
-            print()
+        print('Initialized all services')
+        print()
 
-    def monitor(self):
+    def monitor(self, refresh_time: float = 1.0):
         client = HTTPClient(f'http://{self.provider_endpoint}')
 
         stdscr = curses.initscr()
@@ -135,42 +140,74 @@ class ChainalyticHub(object):
         curses.cbreak()
 
         try:
+            prev_last_block = 0
+            prev_time = time.time()
             while 1:
-                response = client.request(
+                upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')[
+                    'status'
+                ]
+                aggregator_connected = rpc_client.call(self.aggregator_endpoint, call_id='ping')[
+                    'status'
+                ]
+                warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')[
+                    'status'
+                ]
+                provider_connected = client.request(
                     "_call",
-                    call_id='api_call',
-                    api_id='last_block_height',
-                    api_params={'transform_id': 'stake_history'},
-                )
-                r1 = response.data.result
+                    call_id='ping',
+                ).data.result
 
-                response = client.request(
-                    "_call",
-                    call_id='api_call',
-                    api_id='get_staking_info_last_block',
-                    api_params={'transform_id': 'stake_history'},
-                )
-                r2 = json.loads(response.data.result['result'])
+                if (
+                    upstream_connected
+                    and aggregator_connected
+                    and warehouse_connected
+                    and provider_connected
+                ):
+                    res = client.request(
+                        "_call",
+                        call_id='api_call',
+                        api_id='last_block_height',
+                        api_params={'transform_id': 'stake_history'},
+                    )
+                    r1 = res.data.result
 
-                if r1 and r2:
+                    res = client.request(
+                        "_call",
+                        call_id='api_call',
+                        api_id='get_staking_info_last_block',
+                        api_params={'transform_id': 'stake_history'},
+                    )
+                    r2 = json.loads(res.data.result['result'])
+
+                    last_block = r1["result"]
                     total_staking = round(r2['total_staking'], 2)
                     total_unstaking = round(r2['total_unstaking'], 2)
                     total_staking_wallets = round(r2['total_staking_wallets'], 2)
+                else:
+                    last_block = 0
+                    total_staking = 0
+                    total_unstaking = 0
+                    total_staking_wallets = 0
+                
+                speed = int((last_block - prev_last_block) / (time.time() - prev_time))
+                prev_last_block = last_block
+                prev_time = time.time()
+                stdscr.erase() 
+                stdscr.addstr(0, 0, '== Data Aggregation Monitor ==')
+                stdscr.addstr(1, 0, f'Upstream service: {self.upstream_endpoint} {C if upstream_connected else D}')
+                stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {C if aggregator_connected else D}')
+                stdscr.addstr(3, 0, f'Warehouse service: {self.warehouse_endpoint} {C if warehouse_connected else D}')
+                stdscr.addstr(4, 0, f'Provider service: {self.provider_endpoint} {C if provider_connected else D}')
+                stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
+                stdscr.addstr(6, 0, f'----')
+                stdscr.addstr(7, 0, f'Data aggregation speed: {speed} blocks/s')
+                stdscr.addstr(8, 0, f'Last block: {last_block:,}')
+                stdscr.addstr(9, 0, f'Total staking: {total_staking:,}')
+                stdscr.addstr(10, 0, f'Total unstaking: {total_unstaking:,}')
+                stdscr.addstr(11, 0, f'Total staking wallets: {total_staking_wallets:,}')
+                stdscr.refresh()
 
-                    stdscr.addstr(0, 0, '== Data Aggregation Monitor ==')
-                    stdscr.addstr(1, 0, f'Upstream service: {self.upstream_endpoint}')
-                    stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint}')
-                    stdscr.addstr(3, 0, f'Warehouse service: {self.warehouse_endpoint}')
-                    stdscr.addstr(4, 0, f'Provider service: {self.provider_endpoint}')
-                    stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
-                    stdscr.addstr(6, 0, f'----')
-                    stdscr.addstr(7, 0, f'Last block: {r1["result"]:,}')
-                    stdscr.addstr(8, 0, f'Total staking: {total_staking:,}')
-                    stdscr.addstr(9, 0, f'Total unstaking: {total_unstaking:,}')
-                    stdscr.addstr(10, 0, f'Total staking wallets: {total_staking_wallets:,}')
-                    stdscr.refresh()
-
-                time.sleep(1)
+                time.sleep(refresh_time)
         finally:
             curses.echo()
             curses.nocbreak()
