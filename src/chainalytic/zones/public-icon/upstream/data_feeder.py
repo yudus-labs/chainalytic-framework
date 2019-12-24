@@ -3,6 +3,7 @@ import json
 from time import time
 from pprint import pprint
 from pathlib import Path
+import traceback
 from chainalytic.common import config, zone_manager
 from chainalytic.upstream.data_feeder import BaseDataFeeder
 import plyvel
@@ -31,13 +32,14 @@ class DataFeeder(BaseDataFeeder):
             print(f'--Time to init leveldb: {round(time() - t1, 4)}s')
 
         t11 = time()
-        block_hash = db.get(
-            BLOCK_HEIGHT_KEY + height.to_bytes(BLOCK_HEIGHT_BYTES_LEN, byteorder='big')
-        )
+        heightkey = BLOCK_HEIGHT_KEY + height.to_bytes(BLOCK_HEIGHT_BYTES_LEN, byteorder='big')
+        block_hash = db.get(heightkey)
         if verbose:
             print(f'--Time to find block hash: {round(time() - t11, 4)}s')
 
         if not block_hash:
+            if verbose:
+                print(f'--WARNING: block hash not found: {heightkey}')
             return None
 
         try:
@@ -56,24 +58,38 @@ class DataFeeder(BaseDataFeeder):
             else:
                 txs = block['transactions']
         except Exception:
+            if verbose:
+                print('--ERROR in block data loading, skipped feeding')
             return None
 
         if verbose:
             print(f'Total time to load data: {round(time() - t1, 4)}s')
 
-        t4 = time()
-        set_stake_wallets = {}
-        for tx in txs:
-            if 'data' not in tx:
-                continue
-            if 'method' not in tx['data']:
-                continue
-            if tx['data']['method'] == 'setStake':
-                stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
-                set_stake_wallets[tx["from"]] = stake_value
-        if verbose:
-            print(f'Time to pre-process data: {round(time() - t4, 4)}s')
+        try:
+            t4 = time()
+            set_stake_wallets = {}
+            for tx in txs:
+                if 'data' not in tx:
+                    continue
+                if 'method' not in tx['data']:
+                    continue
+                if tx['data']['method'] == 'setStake':
+                    try:
+                        stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
+                        set_stake_wallets[tx["from"]] = stake_value
+                    except ValueError:
+                        pass
+            if verbose:
+                print(f'Time to pre-process data: {round(time() - t4, 4)}s')
 
+        except Exception as e:
+            if verbose:
+                print('ERROR in data pre-processing')
+                print(e)
+                print(traceback.format_exc())
+            return None
+
+        if verbose:
             print(f'Total feeding time: {round(time() - t1, 4)}s')
             print()
 
