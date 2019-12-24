@@ -70,7 +70,7 @@ def _run_server(endpoint, working_dir, zone_id):
     start_server = websockets.serve(main_dispatcher, host, port)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
-    print('Initialized Warehouse')
+    print('Exited Warehouse')
 
 
 if __name__ == "__main__":

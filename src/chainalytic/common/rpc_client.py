@@ -4,6 +4,7 @@ import websockets
 import argparse
 import traceback
 from jsonrpcclient.clients.websockets_client import WebSocketsClient
+from jsonrpcclient.clients.http_client import HTTPClient
 
 SUCCEED_STATUS = 1
 FAILED_STATUS = 0
@@ -44,3 +45,12 @@ def call(endpoint: str, **kwargs) -> Dict:
         dict: {'status': bool, 'data': Any}
     """
     return asyncio.get_event_loop().run_until_complete(call_async(endpoint, **kwargs))
+
+
+def call_aiohttp(endpoint: str, **kwargs) -> Dict:
+    try:
+        client = HTTPClient(f'http://{endpoint}')
+        r = client.request("_call", **kwargs)
+        return {'status': SUCCEED_STATUS, 'data': r.data.result}
+    except Exception as e:
+        return {'status': FAILED_STATUS, 'data': f'{str(e)}\n{traceback.format_exc()}'}

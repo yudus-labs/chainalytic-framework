@@ -18,6 +18,7 @@ rpc_client.call(
 """
 
 import os
+import sys
 import argparse
 import websockets
 import asyncio
@@ -47,6 +48,8 @@ async def _call(call_id: str, **kwargs):
         )
         return message
     elif call_id == 'exit':
+        print('Service is terminated')
+        sys.exit()
         return EXIT_SERVICE
     elif call_id == 'api_call':
         api_id = params['api_id']
@@ -92,7 +95,7 @@ def _run_server(endpoint, working_dir, zone_id):
     app.router.add_post("/", handle)
     web.run_app(app, port=port)
 
-    print('Initialized Provider')
+    print('Exited Provider')
 
 
 if __name__ == "__main__":

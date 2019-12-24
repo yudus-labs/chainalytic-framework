@@ -47,16 +47,30 @@ class Console(object):
         self.warehouse_endpoint = config.get_setting()['warehouse_endpoint']
         self.provider_endpoint = config.get_setting()['provider_endpoint']
 
-    def cleanup_services(self):
-        for service in [
-            self.provider_endpoint,
-            self.aggregator_endpoint,
-            self.upstream_endpoint,
-            self.warehouse_endpoint,
-        ]:
-            r = rpc_client.call(service, call_id='exit')
-            if r['data'] == rpc_server.EXIT_SERVICE:
-                print(f'Cleaned service endpoint: {service}')
+    def cleanup_services(self, endpoint: str = None):
+        print('Cleaning up services...')
+        if endpoint:
+            all_endpoints = [endpoint]
+        else:
+            all_endpoints = [
+                self.provider_endpoint,
+                self.aggregator_endpoint,
+                self.upstream_endpoint,
+                self.warehouse_endpoint,
+            ]
+
+        for service in all_endpoints:
+            try:
+                if service == self.provider_endpoint:
+                    r = rpc_client.call_aiohttp(service, call_id='exit')['status']
+                else:
+                    r = rpc_client.call(service, call_id='exit')['status']
+            except:
+                r = None
+
+            if r:
+                print(f'----Cleaned service endpoint: {service}')
+
         print('Cleaned all Chainalytic services')
 
     def init_services(self, force_restart: bool = 0):
@@ -114,7 +128,7 @@ class Console(object):
             print(f'Started Aggregator service: {" ".join(aggregator_cmd)}')
             print()
 
-        if not rpc_client.call(self.provider_endpoint, call_id='ping')['status']:
+        if not rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']:
             provider_cmd = [
                 python_exe,
                 '-m',
@@ -133,6 +147,12 @@ class Console(object):
         print()
 
     def monitor(self, refresh_time: float = 1.0):
+        print('Starting aggregation monitor, waiting for Provider service...')
+        ready = 0
+        while not ready:
+            time.sleep(0.5)
+            ready = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
+
         client = HTTPClient(f'http://{self.provider_endpoint}')
 
         stdscr = curses.initscr()
