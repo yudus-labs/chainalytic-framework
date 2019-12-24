@@ -19,7 +19,7 @@ This project uses `tox` and `pytest` for automated test
 To run all tests, in current virtual env, run +
 `tox`
 
-#### Run Chainalytic services
+#### Run Chainalytic services and monitoring console
 
 *Individual services, assume you are in root directory of Git repo*
 
@@ -28,11 +28,11 @@ To run all tests, in current virtual env, run +
 `venv/bin/python -m chainalytic.warehouse --endpoint localhost:5520 --zone_id public-icon --working_dir .` +
 `venv/bin/python -m chainalytic.provider --endpoint localhost:5530 --zone_id public-icon --working_dir .`
 
-*All services, assume you are in root directory of Git repo*
+*All services and console, assume you are in root directory of Git repo*
 
-`venv/bin/python chainalytic_hub_launcher.py`
+`venv/bin/python launch.py [-r | --refresh-time <TIME_IN_SECONDS>]`
 
 *Terminate all services*
 
-`venv/bin/python chainalytic_hub_launcher.py --clean`
+`venv/bin/python launch.py --clean`
 
