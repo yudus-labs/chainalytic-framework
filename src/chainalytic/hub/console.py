@@ -1,16 +1,26 @@
-from typing import Optional
-import sys
+import curses
+import json
 import os
 import subprocess
+import sys
 import time
-import json
-import curses
+from datetime import datetime, timedelta
+from pprint import pprint
 from subprocess import DEVNULL, STDOUT
-from chainalytic.common import rpc_client, rpc_server, config
+from typing import Optional
+
 from jsonrpcclient.clients.http_client import HTTPClient
+
+from chainalytic.common import config, rpc_client, rpc_server
 
 C = 'CONNECTED'
 D = 'DISCONNECTED'
+
+
+def seconds_to_datetime(seconds: int):
+    sec = timedelta(seconds=seconds)
+    d = datetime(1, 1, 1) + sec
+    return f'{d.day - 1} days, {d.hour} hours, {d.minute} minutes, {d.second} seconds'
 
 
 class Console(object):
@@ -60,15 +70,14 @@ class Console(object):
             ]
 
         for service in all_endpoints:
-            try:
-                if service == self.provider_endpoint:
-                    r = rpc_client.call_aiohttp(service, call_id='exit')['status']
-                else:
-                    r = rpc_client.call(service, call_id='exit')['status']
-            except:
-                r = None
+            if service == self.provider_endpoint:
+                r = rpc_client.call_aiohttp(service, call_id='ping')
+                if r['status']:
+                    rpc_client.call_aiohttp(service, call_id='exit')
+            else:
+                r = rpc_client.call(service, call_id='exit')
 
-            if r:
+            if r['status']:
                 print(f'----Cleaned service endpoint: {service}')
 
         print('Cleaned all Chainalytic services')
@@ -92,7 +101,7 @@ class Console(object):
                 '--working_dir',
                 os.getcwd(),
             ]
-            subprocess.Popen(upstream_cmd, stdout=DEVNULL, stderr=STDOUT)
+            subprocess.Popen(upstream_cmd, stdout=DEVNULL, stderr=STDOUT, start_new_session=True)
             print(f'Started Aggregator service: {" ".join(upstream_cmd)}')
             print()
 
@@ -108,7 +117,7 @@ class Console(object):
                 '--working_dir',
                 os.getcwd(),
             ]
-            subprocess.Popen(warehouse_cmd, stdout=DEVNULL, stderr=STDOUT)
+            subprocess.Popen(warehouse_cmd, stdout=DEVNULL, stderr=STDOUT, start_new_session=True)
             print(f'Started Warehouse service: {" ".join(warehouse_cmd)}')
             print()
 
@@ -124,7 +133,7 @@ class Console(object):
                 '--working_dir',
                 os.getcwd(),
             ]
-            subprocess.Popen(aggregator_cmd, stdout=DEVNULL, stderr=STDOUT)
+            subprocess.Popen(aggregator_cmd, stdout=DEVNULL, stderr=STDOUT, start_new_session=True)
             print(f'Started Aggregator service: {" ".join(aggregator_cmd)}')
             print()
 
@@ -140,7 +149,7 @@ class Console(object):
                 '--working_dir',
                 os.getcwd(),
             ]
-            subprocess.Popen(provider_cmd, stdout=DEVNULL, stderr=STDOUT)
+            subprocess.Popen(provider_cmd, stdout=DEVNULL, stderr=STDOUT, start_new_session=True)
             print(f'Started Provider service: {" ".join(provider_cmd)}')
             print()
         print('Initialized all services')
@@ -148,9 +157,9 @@ class Console(object):
 
     def monitor(self, refresh_time: float = 1.0):
         print('Starting aggregation monitor, waiting for Provider service...')
-        ready = 0
+        ready = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
         while not ready:
-            time.sleep(0.5)
+            time.sleep(0.1)
             ready = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
 
         client = HTTPClient(f'http://{self.provider_endpoint}')
@@ -160,6 +169,7 @@ class Console(object):
         curses.cbreak()
 
         try:
+            latest_block_height = 0
             prev_last_block = 0
             prev_time = time.time()
             while 1:
@@ -172,10 +182,14 @@ class Console(object):
                 warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')[
                     'status'
                 ]
-                provider_connected = client.request(
-                    "_call",
-                    call_id='ping',
-                ).data.result
+                provider_connected = client.request("_call", call_id='ping',).data.result
+
+                if upstream_connected:
+                    upstream_response = rpc_client.call(
+                        self.upstream_endpoint, call_id='last_block_height'
+                    )
+                    if upstream_response['status']:
+                        latest_block_height = upstream_response['data']
 
                 if (
                     upstream_connected
@@ -208,23 +222,39 @@ class Console(object):
                     total_staking = 0
                     total_unstaking = 0
                     total_staking_wallets = 0
-                
+
                 speed = int((last_block - prev_last_block) / (time.time() - prev_time))
                 prev_last_block = last_block
                 prev_time = time.time()
-                stdscr.erase() 
+
+                if latest_block_height > 0 and speed > 0:
+                    remaining_time = seconds_to_datetime((latest_block_height - last_block) / speed)
+                elif latest_block_height == last_block and last_block > 0:
+                    remaining_time = 'Fully synced'
+                else:
+                    remaining_time = 'N/A'
+
+                c1 = C if upstream_connected else D
+                c2 = C if aggregator_connected else D
+                c3 = C if warehouse_connected else D
+                c4 = C if provider_connected else D
+
+                stdscr.erase()
                 stdscr.addstr(0, 0, '== Data Aggregation Monitor ==')
-                stdscr.addstr(1, 0, f'Upstream service: {self.upstream_endpoint} {C if upstream_connected else D}')
-                stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {C if aggregator_connected else D}')
-                stdscr.addstr(3, 0, f'Warehouse service: {self.warehouse_endpoint} {C if warehouse_connected else D}')
-                stdscr.addstr(4, 0, f'Provider service: {self.provider_endpoint} {C if provider_connected else D}')
+                stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
+                stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
+                stdscr.addstr(3, 0, f'Warehouse service:  {self.warehouse_endpoint} {c3}')
+                stdscr.addstr(4, 0, f'Provider service:   {self.provider_endpoint} {c4}')
                 stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
                 stdscr.addstr(6, 0, f'----')
-                stdscr.addstr(7, 0, f'Data aggregation speed: {speed} blocks/s')
-                stdscr.addstr(8, 0, f'Last block: {last_block:,}')
-                stdscr.addstr(9, 0, f'Total staking: {total_staking:,}')
-                stdscr.addstr(10, 0, f'Total unstaking: {total_unstaking:,}')
-                stdscr.addstr(11, 0, f'Total staking wallets: {total_staking_wallets:,}')
+                stdscr.addstr(7, 0, f'Latest block upstream chain: {latest_block_height:,}')
+                stdscr.addstr(8, 0, f'Latest aggregated block:     {last_block:,}')
+                stdscr.addstr(9, 0, f'Data aggregation speed:      {speed} blocks/s')
+                stdscr.addstr(10, 0, f'Estimated time remaining:    {remaining_time}')
+                stdscr.addstr(11, 0, f'----')
+                stdscr.addstr(12, 0, f'Total staking:         {total_staking:,}')
+                stdscr.addstr(13, 0, f'Total unstaking:       {total_unstaking:,}')
+                stdscr.addstr(14, 0, f'Total staking wallets: {total_staking_wallets:,}')
                 stdscr.refresh()
 
                 time.sleep(refresh_time)
