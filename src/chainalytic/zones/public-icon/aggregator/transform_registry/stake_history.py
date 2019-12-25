@@ -33,7 +33,7 @@ class Transform(BaseTransform):
         super(Transform, self).__init__(working_dir, zone_id, transform_id)
 
     def _get_total_supply(self) -> int:
-        db = plyvel.DB(self.kernel.icon_state_db_dir)
+        db = plyvel.DB(self.kernel.score_db_icondex_dir)
         r = db.get(b'total_supply')
         return int.from_bytes(r, 'big') / 10 ** 18
 
