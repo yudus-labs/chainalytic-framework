@@ -1,12 +1,14 @@
-from typing import List, Set, Dict, Tuple, Optional
 import json
-from time import time
-from pprint import pprint
-from pathlib import Path
 import traceback
+from pathlib import Path
+from pprint import pprint
+from time import time
+from typing import Dict, List, Optional, Set, Tuple
+
+import plyvel
+
 from chainalytic.common import config, zone_manager
 from chainalytic.upstream.data_feeder import BaseDataFeeder
-import plyvel
 
 BLOCK_HEIGHT_KEY = b'block_height_key'
 BLOCK_HEIGHT_BYTES_LEN = 12
@@ -17,6 +19,8 @@ V3_BLOCK_HEIGHT = 10324749
 
 
 class DataFeeder(BaseDataFeeder):
+    LAST_BLOCK_KEY = b'last_block_key'
+
     def __init__(self, working_dir: str, zone_id: str):
         super(DataFeeder, self).__init__(working_dir, zone_id)
 
@@ -94,3 +98,14 @@ class DataFeeder(BaseDataFeeder):
             print()
 
         return set_stake_wallets
+
+    async def last_block_height(self) -> Optional[int]:
+        """Get last block height from chain
+        """
+        db = self.chain_db
+
+        block_hash = db.get(DataFeeder.LAST_BLOCK_KEY)
+        data = db.get(block_hash)
+        if data:
+            block = json.loads(data)
+            return int(block['height'], 16)

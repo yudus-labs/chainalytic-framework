@@ -5,13 +5,17 @@ from chainalytic.common import rpc_client
 rpc_client.call('localhost:5500', call_id='get_block', height=10000000)
 
 """
-import os
 import argparse
-import websockets
 import asyncio
+import os
 import time
+
+import websockets
 from jsonrpcserver import method
-from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
+
+from chainalytic.common.rpc_server import (EXIT_SERVICE, main_dispatcher,
+                                           show_call_info)
+
 from . import Upstream
 
 _UPSTREAM = None
@@ -37,6 +41,8 @@ async def _call(call_id: str, **kwargs):
     elif call_id == 'get_block':
         height = params['height']
         return await _UPSTREAM.data_feeder.get_block(height)
+    elif call_id == 'last_block_height':
+        return await _UPSTREAM.data_feeder.last_block_height()
     else:
         return f'Not implemented'
 

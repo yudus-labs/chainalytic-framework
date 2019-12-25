@@ -1,6 +1,8 @@
-from typing import List, Set, Dict, Tuple, Optional
-from . import data_feeder
+from typing import Dict, List, Optional, Set, Tuple
+
 from chainalytic.common import config, zone_manager
+
+from . import data_feeder
 
 
 class Upstream(object):
@@ -22,4 +24,3 @@ class Upstream(object):
 
         mods = zone_manager.load_zone(self.zone_id)['upstream']
         self.data_feeder = mods['data_feeder'].DataFeeder(working_dir, zone_id)
-
