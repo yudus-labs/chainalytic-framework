@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from pprint import pprint
-from subprocess import DEVNULL, STDOUT
+from subprocess import DEVNULL, STDOUT, PIPE
 from typing import Optional
 
 from jsonrpcclient.clients.http_client import HTTPClient
@@ -120,8 +120,12 @@ class Console(object):
         print('Initializing Chainalytic services...')
         python_exe = sys.executable
 
+        sudo = ['sudo', '-S'] if 'SUDO_PWD' in os.environ else []
+        echo_pwd = ['echo', os.environ['SUDO_PWD']] if 'SUDO_PWD' in os.environ else []
+
         if not rpc_client.call(self.upstream_endpoint, call_id='ping')['status']:
-            upstream_cmd = [
+            echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
+            upstream_cmd = sudo + [
                 python_exe,
                 '-m',
                 'chainalytic.upstream',
@@ -132,12 +136,19 @@ class Console(object):
                 '--working_dir',
                 os.getcwd(),
             ]
-            subprocess.Popen(upstream_cmd, stdout=DEVNULL, stderr=STDOUT, start_new_session=True)
-            print(f'Started Aggregator service: {" ".join(upstream_cmd)}')
+            subprocess.Popen(
+                upstream_cmd,
+                stdin=echo.stdout if echo else None,
+                stdout=DEVNULL,
+                stderr=STDOUT,
+                start_new_session=True,
+            )
+            print(f'Started Upstream service: {" ".join(upstream_cmd)}')
             print()
 
         if not rpc_client.call(self.warehouse_endpoint, call_id='ping')['status']:
-            warehouse_cmd = [
+            echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
+            warehouse_cmd = sudo + [
                 python_exe,
                 '-m',
                 'chainalytic.warehouse',
@@ -148,12 +159,19 @@ class Console(object):
                 '--working_dir',
                 os.getcwd(),
             ]
-            subprocess.Popen(warehouse_cmd, stdout=DEVNULL, stderr=STDOUT, start_new_session=True)
+            subprocess.Popen(
+                warehouse_cmd,
+                stdin=echo.stdout if echo else None,
+                stdout=DEVNULL,
+                stderr=STDOUT,
+                start_new_session=True,
+            )
             print(f'Started Warehouse service: {" ".join(warehouse_cmd)}')
             print()
 
         if not rpc_client.call(self.aggregator_endpoint, call_id='ping')['status']:
-            aggregator_cmd = [
+            echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
+            aggregator_cmd = sudo + [
                 python_exe,
                 '-m',
                 'chainalytic.aggregator',
@@ -164,12 +182,19 @@ class Console(object):
                 '--working_dir',
                 os.getcwd(),
             ]
-            subprocess.Popen(aggregator_cmd, stdout=DEVNULL, stderr=STDOUT, start_new_session=True)
+            subprocess.Popen(
+                aggregator_cmd,
+                stdin=echo.stdout if echo else None,
+                stdout=DEVNULL,
+                stderr=STDOUT,
+                start_new_session=True,
+            )
             print(f'Started Aggregator service: {" ".join(aggregator_cmd)}')
             print()
 
         if not rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']:
-            provider_cmd = [
+            echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
+            provider_cmd = sudo + [
                 python_exe,
                 '-m',
                 'chainalytic.provider',
@@ -180,7 +205,13 @@ class Console(object):
                 '--working_dir',
                 os.getcwd(),
             ]
-            subprocess.Popen(provider_cmd, stdout=DEVNULL, stderr=STDOUT, start_new_session=True)
+            subprocess.Popen(
+                provider_cmd,
+                stdin=echo.stdout if echo else None,
+                stdout=DEVNULL,
+                stderr=STDOUT,
+                start_new_session=True,
+            )
             print(f'Started Provider service: {" ".join(provider_cmd)}')
             print()
         print('Initialized all services')

@@ -23,7 +23,7 @@ if __name__ == '__main__':
     try:
         if args.command == 'clean':
             console.load_config()
-            console.cleanup_services(args.endpoint if args.endpoint else None)
+            console.cleanup_services(args.endpoint)
         elif args.init_config:
             console.init_config()
         else:
