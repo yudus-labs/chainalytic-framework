@@ -43,6 +43,10 @@ Handle data aggregation monitoring.
 
 ## Getting started
 
+*Prerequisite ( Ubuntu 18.04 )*
+
+`sudo apt install libsecp256k1-dev libleveldb-dev pkg-config`
+
 ### 1. Chainalytic Console
 
 *You must setup user config first, run below command to generate it*
