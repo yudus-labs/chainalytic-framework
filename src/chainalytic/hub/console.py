@@ -33,6 +33,7 @@ class Console(object):
         aggregator_endpoint (str):
         warehouse_endpoint (str):
         provider_endpoint (str):
+        is_endpoint_set (bool):
 
     Methods:
         cleanup_services()
@@ -43,22 +44,49 @@ class Console(object):
 
     def __init__(self, working_dir: Optional[str] = None):
         super(Console, self).__init__()
-        print('Starting Chainalytic console...')
+        print('Starting Chainalytic Console...')
 
-        if not working_dir:
-            config.set_working_dir(os.getcwd())
-        else:
-            config.set_working_dir(working_dir)
-        self.working_dir = config.get_working_dir()
-        config.init_user_config(self.working_dir)
+        self.working_dir = working_dir if working_dir else os.getcwd()
+        self.cfg = None
+        self.upstream_endpoint = None
+        self.aggregator_endpoint = None
+        self.warehouse_endpoint = None
+        self.provider_endpoint = None
 
+    def init_config(self):
+        """Load user config ( and generate it if not found )"""
+        cfg = config.init_user_config(self.working_dir)
+        if not cfg:
+            raise Exception('Failed to init user config')
+
+        print('Generated user config')
+        print(f'--Chain registry: {cfg["chain_registry"]}')
+        print(f'--Setting: {cfg["setting"]}')
+
+    def load_config(self):
+        if not config.check_user_config(self.working_dir):
+            raise Exception('User config not found, please init config first')
+
+        config.set_working_dir(self.working_dir)
         self.upstream_endpoint = config.get_setting()['upstream_endpoint']
         self.aggregator_endpoint = config.get_setting()['aggregator_endpoint']
         self.warehouse_endpoint = config.get_setting()['warehouse_endpoint']
         self.provider_endpoint = config.get_setting()['provider_endpoint']
 
+    @property
+    def is_endpoint_set(self) -> bool:
+        return (
+            self.upstream_endpoint
+            and self.aggregator_endpoint
+            and self.warehouse_endpoint
+            and self.provider_endpoint
+        )
+
     def cleanup_services(self, endpoint: str = None):
+        assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
+
         print('Cleaning up services...')
+        cleaned = 0
         if endpoint:
             all_endpoints = [endpoint]
         else:
@@ -78,11 +106,14 @@ class Console(object):
                 r = rpc_client.call(service, call_id='exit')
 
             if r['status']:
+                cleaned = 1
                 print(f'----Cleaned service endpoint: {service}')
 
-        print('Cleaned all Chainalytic services')
+        print('Cleaned all Chainalytic services' if cleaned else 'Nothing to clean')
 
     def init_services(self, force_restart: bool = 0):
+        assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
+
         if force_restart:
             self.cleanup_services()
 
@@ -156,6 +187,8 @@ class Console(object):
         print()
 
     def monitor(self, refresh_time: float = 1.0):
+        assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
+
         print('Starting aggregation monitor, waiting for Provider service...')
         ready = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
         while not ready:
@@ -191,6 +224,11 @@ class Console(object):
                     if upstream_response['status']:
                         latest_block_height = upstream_response['data']
 
+                last_block = 0
+                total_staking = 0
+                total_unstaking = 0
+                total_staking_wallets = 0
+
                 if (
                     upstream_connected
                     and aggregator_connected
@@ -211,17 +249,13 @@ class Console(object):
                         api_id='get_staking_info_last_block',
                         api_params={'transform_id': 'stake_history'},
                     )
-                    r2 = json.loads(res.data.result['result'])
+                    if res.data.result['result']:
+                        r2 = json.loads(res.data.result['result'])
 
-                    last_block = r1["result"]
-                    total_staking = round(r2['total_staking'], 2)
-                    total_unstaking = round(r2['total_unstaking'], 2)
-                    total_staking_wallets = round(r2['total_staking_wallets'], 2)
-                else:
-                    last_block = 0
-                    total_staking = 0
-                    total_unstaking = 0
-                    total_staking_wallets = 0
+                        last_block = r1["result"]
+                        total_staking = round(r2['total_staking'], 2)
+                        total_unstaking = round(r2['total_unstaking'], 2)
+                        total_staking_wallets = round(r2['total_staking_wallets'], 2)
 
                 speed = int((last_block - prev_last_block) / (time.time() - prev_time))
                 prev_last_block = last_block
