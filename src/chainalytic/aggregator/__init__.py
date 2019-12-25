@@ -1,7 +1,8 @@
-from typing import List, Set, Dict, Tuple, Optional, Any, Callable
-from . import kernel
-from . import transform
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
 from chainalytic.common import config, zone_manager
+
+from . import kernel, transform
 
 
 class Aggregator(object):

@@ -1,4 +1,5 @@
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
+
 from chainalytic.common import config, zone_manager
 
 

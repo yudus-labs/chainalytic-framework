@@ -1,13 +1,14 @@
-from typing import List, Set, Dict, Tuple, Optional, Union
 import json
 import time
-import plyvel
-from chainalytic.common import rpc_client, trie
-from chainalytic.aggregator.transform import BaseTransform
+from typing import Dict, List, Optional, Set, Tuple, Union
 
-from iconservice.iiss.engine import Engine
-from iconservice.icon_constant import ConfigKey
+import plyvel
 from iconservice.icon_config import default_icon_config
+from iconservice.icon_constant import ConfigKey
+from iconservice.iiss.engine import Engine
+
+from chainalytic.aggregator.transform import BaseTransform
+from chainalytic.common import rpc_client, trie
 
 
 def unlock_period(total_stake, total_supply):

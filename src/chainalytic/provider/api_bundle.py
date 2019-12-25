@@ -1,6 +1,8 @@
-from typing import List, Set, Dict, Tuple, Optional, Any, Callable
 import traceback
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
 from chainalytic.common import config, zone_manager
+
 from .collator import BaseCollator
 
 
@@ -45,4 +47,3 @@ class BaseApiBundle(object):
             ret['result'] = f'{str(e)}\n{traceback.format_exc()}'
 
         return ret
-

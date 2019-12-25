@@ -1,7 +1,8 @@
-from typing import List, Set, Dict, Tuple, Optional
-from . import collator
-from . import api_bundle
+from typing import Dict, List, Optional, Set, Tuple
+
 from chainalytic.common import config, zone_manager
+
+from . import api_bundle, collator
 
 
 class Provider(object):

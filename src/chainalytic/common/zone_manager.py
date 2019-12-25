@@ -1,6 +1,7 @@
-from typing import List, Set, Dict, Tuple, Optional
-from pathlib import Path
 import importlib
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
+
 from chainalytic.common import config
 
 ZONE_MODULES = {

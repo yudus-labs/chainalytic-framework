@@ -1,6 +1,8 @@
-from typing import List, Set, Dict, Tuple, Optional
 import sys
+from typing import Dict, List, Optional, Set, Tuple
+
 from jsonrpcserver import async_dispatch as dispatch
+
 from chainalytic.common import util
 
 EXIT_SERVICE = '__EXIT_SERVICE__'

@@ -1,6 +1,8 @@
-from typing import List, Set, Dict, Tuple, Optional
-from . import storage
+from typing import Dict, List, Optional, Set, Tuple
+
 from chainalytic.common import config, zone_manager
+
+from . import storage
 
 
 class Warehouse(object):

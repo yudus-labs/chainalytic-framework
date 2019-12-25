@@ -1,7 +1,9 @@
-from typing import List, Set, Dict, Tuple, Optional, Union, Collection
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Collection, Dict, List, Optional, Set, Tuple, Union
+
 import plyvel
+
 from chainalytic.common import config, zone_manager
 from chainalytic.warehouse.storage import BaseStorage
 

@@ -1,6 +1,8 @@
-from typing import List, Set, Dict, Tuple, Optional, Any, Callable
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
 import plyvel
+
 from chainalytic.common import config
 
 
@@ -52,4 +54,3 @@ class BaseTransform(object):
 
     async def execute(self, height: int, input_data: Any) -> Dict:
         return {'height': height, 'data': {}}
-

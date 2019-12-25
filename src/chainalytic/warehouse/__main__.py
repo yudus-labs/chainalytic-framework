@@ -9,14 +9,18 @@ rpc_client.call(f'localhost:5520', call_id='set_last_block_height', height=999, 
 
 """
 
-import os
 import argparse
-import websockets
 import asyncio
+import os
 import time
 from pprint import pprint
+
+import websockets
 from jsonrpcserver import method
-from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
+
+from chainalytic.common.rpc_server import (EXIT_SERVICE, main_dispatcher,
+                                           show_call_info)
+
 from . import Warehouse
 
 _WAREHOUSE = None

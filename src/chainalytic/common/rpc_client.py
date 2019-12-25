@@ -1,10 +1,11 @@
-from typing import List, Set, Dict, Tuple, Optional
-import asyncio
-import websockets
 import argparse
+import asyncio
 import traceback
-from jsonrpcclient.clients.websockets_client import WebSocketsClient
+from typing import Dict, List, Optional, Set, Tuple
+
+import websockets
 from jsonrpcclient.clients.http_client import HTTPClient
+from jsonrpcclient.clients.websockets_client import WebSocketsClient
 
 SUCCEED_STATUS = 1
 FAILED_STATUS = 0

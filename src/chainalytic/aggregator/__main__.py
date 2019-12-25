@@ -1,13 +1,17 @@
+import argparse
+import asyncio
 import os
 import sys
-import argparse
-import websockets
-import asyncio
 from time import time
-from jsonrpcserver import method
+
+import websockets
 from jsonrpcclient.clients.websockets_client import WebSocketsClient
+from jsonrpcserver import method
+
 from chainalytic.common import config, rpc_client
-from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
+from chainalytic.common.rpc_server import (EXIT_SERVICE, main_dispatcher,
+                                           show_call_info)
+
 from . import Aggregator
 
 _AGGREGATOR = None

@@ -1,4 +1,5 @@
-from typing import List, Set, Dict, Tuple, Optional, Any, Callable
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
 from chainalytic.common import config
 from chainalytic.provider.api_bundle import BaseApiBundle
 

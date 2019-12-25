@@ -1,7 +1,8 @@
-from typing import List, Set, Dict, Tuple, Optional
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
+
 from ruamel.yaml import YAML
 
 _WORKING_DIR = os.getcwd()

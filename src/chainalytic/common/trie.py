@@ -1,6 +1,7 @@
-from typing import List, Set, Dict, Tuple, Optional
-import msgpack
 from pprint import pprint
+from typing import Dict, List, Optional, Set, Tuple
+
+import msgpack
 
 
 class Trie(list):

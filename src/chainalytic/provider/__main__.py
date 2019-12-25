@@ -17,16 +17,20 @@ rpc_client.call(
 
 """
 
+import argparse
+import asyncio
 import os
 import sys
-import argparse
-import websockets
-import asyncio
 import time
-from aiohttp import web
-from jsonrpcserver import method, async_dispatch as dispatch
 
-from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
+import websockets
+from aiohttp import web
+from jsonrpcserver import async_dispatch as dispatch
+from jsonrpcserver import method
+
+from chainalytic.common.rpc_server import (EXIT_SERVICE, main_dispatcher,
+                                           show_call_info)
+
 from . import Provider
 
 _PROVIDER = None
