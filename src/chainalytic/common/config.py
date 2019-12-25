@@ -23,8 +23,15 @@ def get_working_dir() -> str:
     return _WORKING_DIR
 
 
+def check_user_config(working_dir: str = get_working_dir()) -> bool:
+    user_config_dir = Path(working_dir, CHAINALYTIC_FOLDER, CFG_FOLDER)
+    a = user_config_dir.joinpath('chain_registry.yml').exists()
+    b = user_config_dir.joinpath('setting.yml').exists()
+    return a and b
+
+
 def init_user_config(working_dir: str = get_working_dir()) -> Dict[str, str]:
-    default_config_dir = Path(working_dir, 'default_cfg')
+    default_config_dir = Path(__file__).resolve().parent.joinpath('default_cfg')
     user_config_dir = Path(working_dir, CHAINALYTIC_FOLDER, CFG_FOLDER)
 
     assert default_config_dir.exists(), 'Default config not found'
