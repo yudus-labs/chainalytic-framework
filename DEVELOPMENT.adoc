@@ -1,4 +1,4 @@
-#### Setup Sublime Text dev environment using `python-language-server`
+#### Setup dev environment
 
 Create virtual env and source it +
 `python3.7 -m venv venv` +
@@ -14,25 +14,6 @@ Testing config is defined in `tox.ini` and `MANIFEST.ini`
 
 #### Testing
 
-This project uses `tox` and `pytest` for automated test
-
+This project uses `tox` and `pytest` for automated test. +
 To run all tests, in current virtual env, run +
 `tox`
-
-#### Run Chainalytic services and monitoring console
-
-*Individual services, assume you are in root directory of Git repo*
-
-`venv/bin/python -m chainalytic.upstream --endpoint localhost:5500 --zone_id public-icon --working_dir .` +
-`venv/bin/python -m chainalytic.aggregator --endpoint localhost:5510 --zone_id public-icon --working_dir .` +
-`venv/bin/python -m chainalytic.warehouse --endpoint localhost:5520 --zone_id public-icon --working_dir .` +
-`venv/bin/python -m chainalytic.provider --endpoint localhost:5530 --zone_id public-icon --working_dir .`
-
-*All services and console, assume you are in root directory of Git repo*
-
-`venv/bin/python launch.py [-r | --refresh-time <TIME_IN_SECONDS>]`
-
-*Terminate all services*
-
-`venv/bin/python launch.py --clean`
-
