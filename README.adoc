@@ -28,20 +28,59 @@ I am also a big fan of link:https://icon.foundation[ICON], thus it comes with on
 
 ## Architecture
 
-### Overview
+image::docs/resource/chainalytic.png[]
 
-##### Main components
+### Chainalytic services
 
-- Chainalytic Hub - this is the entry point ( main process )
 - Upstream
 - Aggregator
 - Warehouse
 - Provider
 
-image::docs/resource/chainalytic-overview.png[]
+### Chainalytic Console
 
-### Details of components
+Handle data aggregation monitoring.
 
-image::docs/resource/chainalytic-aggregator.png[]
-image::docs/resource/chainalytic-warehouse.png[]
-image::docs/resource/chainalytic-provider.png[]
+## Getting started
+
+### 1. Chainalytic Console
+
+*You must setup user config first, run below command to generate it*
+
+`venv/bin/python launch.py --init-config`
+
+*Then, in current working dir, there should be 2 config files*
+
+`.chainalytic/cfg/chain_registry.yml` +
+`.chainalytic/cfg/setting.yml`
+
+In `chain_registry.yml`, for ICON public chain, modify it like below
+----
+zones:
+  - zone_id: 'public-icon'
+    zone_name: 'Public ICON mainnet'
+    client_endpoint: 'https://ctz.solidwallet.io'
+    chain_db_dir: 'path_to/data/mainnet/.storage/db_<YOUR_IP>:7100_icon_dex'
+    score_db_icondex_dir: 'path_to/data/mainnet/.score_data/db/icon_dex'
+----
+
+*Run all services and monitor them*
+
+`venv/bin/python launch.py`
+
+*Terminate all services*
+
+`venv/bin/python launch.py clean`
+
+*Show help*
+
+`venv/bin/python launch.py -h`
+
+### 2. Chainalytic services
+
+*Run individual services ( for debugging )*
+
+`venv/bin/python -m chainalytic.upstream --endpoint localhost:5500 --zone_id public-icon --working_dir .` +
+`venv/bin/python -m chainalytic.aggregator --endpoint localhost:5510 --zone_id public-icon --working_dir .` +
+`venv/bin/python -m chainalytic.warehouse --endpoint localhost:5520 --zone_id public-icon --working_dir .` +
+`venv/bin/python -m chainalytic.provider --endpoint localhost:5530 --zone_id public-icon --working_dir .`
