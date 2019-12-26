@@ -2,13 +2,14 @@
 Sample service calls
 
 from chainalytic.common import rpc_client
-rpc_client.call(
+
+rpc_client.call_aiohttp(
     f'localhost:5530',
     call_id='api_call',
     api_id='get_staking_info',
     api_params={'height': 999999}
 )
-rpc_client.call(
+rpc_client.call_aiohttp(
     f'localhost:5530',
     call_id='api_call',
     api_id='last_block_height',

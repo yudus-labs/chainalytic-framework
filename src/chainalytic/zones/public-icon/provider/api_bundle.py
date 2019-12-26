@@ -1,3 +1,29 @@
+"""
+Exposed APIs
+
+from chainalytic.common import rpc_client
+
+rpc_client.call_aiohttp(
+    'localhost:5530',
+    call_id='api_call',
+    api_id='get_staking_info',
+    api_params={'height': 9999999}
+)
+rpc_client.call_aiohttp(
+    'localhost:5530',
+    call_id='api_call',
+    api_id='last_block_height',
+    api_params={'transform_id': 'stake_history'}
+)
+rpc_client.call_aiohttp(
+    'localhost:5530',
+    call_id='api_call',
+    api_id='get_staking_info_last_block',
+    api_params={'transform_id': 'stake_history'}
+)
+
+"""
+
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from chainalytic.common import config
