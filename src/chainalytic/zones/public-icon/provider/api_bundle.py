@@ -31,6 +31,9 @@ from chainalytic.provider.api_bundle import BaseApiBundle
 
 
 class ApiBundle(BaseApiBundle):
+    """
+    The interface to external consumers/applications
+    """
 
     def __init__(self, working_dir: str, zone_id: str):
         super(ApiBundle, self).__init__(working_dir, zone_id)
