@@ -28,6 +28,7 @@ class Transform(BaseTransform):
     LAST_TOTAL_STAKING_KEY = b'last_total_staking'
     LAST_TOTAL_UNSTAKING_KEY = b'last_total_unstaking'
     LAST_TOTAL_STAKING_WALLETS_KEY = b'last_total_staking_wallets'
+    LAST_TOTAL_UNSTAKING_WALLETS_KEY = b'last_total_unstaking_wallets'
 
     def __init__(self, working_dir: str, zone_id: str, transform_id: str):
         super(Transform, self).__init__(working_dir, zone_id, transform_id)
@@ -64,16 +65,21 @@ class Transform(BaseTransform):
         prev_total_staking = cache_db.get(Transform.LAST_TOTAL_STAKING_KEY)
         prev_total_unstaking = cache_db.get(Transform.LAST_TOTAL_UNSTAKING_KEY)
         prev_total_staking_wallets = cache_db.get(Transform.LAST_TOTAL_STAKING_WALLETS_KEY)
+        prev_total_unstaking_wallets = cache_db.get(Transform.LAST_TOTAL_UNSTAKING_WALLETS_KEY)
 
         prev_total_staking = float(prev_total_staking) if prev_total_staking else 0
         prev_total_unstaking = float(prev_total_unstaking) if prev_total_unstaking else 0
         prev_total_staking_wallets = (
             int(float(prev_total_staking_wallets)) if prev_total_staking_wallets else 0
         )
+        prev_total_unstaking_wallets = (
+            int(float(prev_total_unstaking_wallets)) if prev_total_unstaking_wallets else 0
+        )
 
         total_staking = prev_total_staking
         total_unstaking = prev_total_unstaking
         total_staking_wallets = prev_total_staking_wallets
+        total_unstaking_wallets = prev_total_unstaking_wallets
 
         # Cleanup expired unlock period
         #
@@ -97,7 +103,8 @@ class Transform(BaseTransform):
         # and put them to transform cache
         # Only process wallets that set new stake in current block
         #
-        set_stake_wallets = input_data
+        set_stake_wallets = input_data['data']
+        timestamp = input_data['timestamp']
         for addr in set_stake_wallets:
             addr_data = cache_db.get(addr.encode())
 
@@ -154,6 +161,7 @@ class Transform(BaseTransform):
                     unstaking_addresses = {}
                 unstaking_addresses[addr] = unlock_height
                 cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
+                total_unstaking_wallets = len(unstaking_addresses)
 
             # Update total staking and unstaking
             total_staking = total_staking - prev_stake_value + cur_stake_value
@@ -163,6 +171,7 @@ class Transform(BaseTransform):
         cache_db_batch.put(Transform.LAST_TOTAL_STAKING_KEY, str(total_staking).encode())
         cache_db_batch.put(Transform.LAST_TOTAL_UNSTAKING_KEY, str(total_unstaking).encode())
         cache_db_batch.put(Transform.LAST_TOTAL_STAKING_WALLETS_KEY, str(total_staking_wallets).encode())
+        cache_db_batch.put(Transform.LAST_TOTAL_UNSTAKING_WALLETS_KEY, str(total_unstaking_wallets).encode())
         cache_db_batch.write()
 
         execution_time = f'{round(time.time()-start_time, 4)}s'
@@ -171,7 +180,9 @@ class Transform(BaseTransform):
             'total_staking': total_staking,
             'total_unstaking': total_unstaking,
             'total_staking_wallets': total_staking_wallets,
+            'total_unstaking_wallets': total_unstaking_wallets,
             'execution_time': execution_time,
+            'timestamp': timestamp,
         }
 
         return {'height': height, 'data': data}
