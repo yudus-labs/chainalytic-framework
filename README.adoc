@@ -32,20 +32,40 @@ image::docs/resource/chainalytic.png[]
 
 ### Chainalytic services
 
-- Upstream
-- Aggregator
-- Warehouse
-- Provider
+*_Upstream, service ID = 0_*
+
+Load and pre-processing original block data, then pass it to Aggregator
+
+*_Aggregator, service ID = 1_*
+
+Transform and aggregate data
+
+*_Warehouse, service ID = 2_*
+
+Take care of all storage tasks
+
+*_Provider, service ID = 3_*
+
+Communicate with Warehouse and ask for aggregated data, then provide it to external applications via public APIs
 
 ### Chainalytic Console
 
 Handle data aggregation monitoring.
 
-## Getting started
+## Quick start
 
-*Prerequisite ( Ubuntu 18.04 )*
+*Prerequisite*
 
-`sudo apt install libsecp256k1-dev libleveldb-dev pkg-config`
+Ubuntu 18.04 and Python 3.7
+
+Install dependencies
+[source]
+----
+sudo apt update
+sudo apt install libsecp256k1-dev libleveldb-dev pkg-config
+
+venv/bin/pip install -e .
+----
 
 ### 1. Chainalytic Console
 
@@ -55,8 +75,11 @@ Handle data aggregation monitoring.
 
 *Then, in current working dir, there should be 2 config files*
 
-`.chainalytic/cfg/chain_registry.yml` +
-`.chainalytic/cfg/setting.yml`
+[source]
+----
+.chainalytic/cfg/chain_registry.yml
+.chainalytic/cfg/setting.yml
+----
 
 In `chain_registry.yml`, for ICON public chain, modify it like below
 ----
@@ -84,7 +107,59 @@ zones:
 
 *Run individual services ( for debugging )*
 
-`venv/bin/python -m chainalytic.upstream --endpoint localhost:5500 --zone_id public-icon --working_dir .` +
-`venv/bin/python -m chainalytic.aggregator --endpoint localhost:5510 --zone_id public-icon --working_dir .` +
-`venv/bin/python -m chainalytic.warehouse --endpoint localhost:5520 --zone_id public-icon --working_dir .` +
-`venv/bin/python -m chainalytic.provider --endpoint localhost:5530 --zone_id public-icon --working_dir .`
+[source]
+----
+venv/bin/python -m chainalytic.upstream --endpoint localhost:5500 --zone_id public-icon --working_dir .
+venv/bin/python -m chainalytic.aggregator --endpoint localhost:5510 --zone_id public-icon --working_dir .
+venv/bin/python -m chainalytic.warehouse --endpoint localhost:5520 --zone_id public-icon --working_dir .
+venv/bin/python -m chainalytic.provider --endpoint localhost:5530 --zone_id public-icon --working_dir .
+----
+
+### 3. Producer service JSON-RPC APIs
+
+#### `public-icon` zone
+
+last_block_height
+[source]
+----
+{
+    "method": "_call",
+    "params": {
+        "call_id": "api_call",
+        "api_id": "last_block_height",
+        "api_params": {"transform_id": "stake_history"}
+    },
+    "id": 123,
+  	"jsonrpc": "2.0"
+}
+----
+
+get_staking_info_last_block
+[source]
+----
+{
+    "method": "_call",
+    "params": {
+        "call_id": "api_call",
+        "api_id": "get_staking_info_last_block",
+        "api_params": {}
+    },
+    "id": 123,
+  	"jsonrpc": "2.0"
+}
+----
+
+get_staking_info
+[source]
+----
+{
+    "method": "_call",
+    "params": {
+        "call_id": "api_call",
+        "api_id": "get_staking_info",
+        "api_params": {"height": 9999999}
+    },
+    "id": 123,
+  	"jsonrpc": "2.0"
+}
+----
