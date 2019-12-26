@@ -62,7 +62,7 @@ Install dependencies
 [source]
 ----
 sudo apt update
-sudo apt install libsecp256k1-dev libleveldb-dev pkg-config
+sudo apt install libsecp256k1-dev libleveldb-dev pkg-config build-essential
 
 venv/bin/pip install -e .
 ----
