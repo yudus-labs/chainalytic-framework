@@ -97,7 +97,7 @@ zones:
 
 *Terminate all services*
 
-`venv/bin/python launch.py clean`
+`venv/bin/python launch.py stop`
 
 *Show help*
 
