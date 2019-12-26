@@ -17,7 +17,6 @@ C = 'CONNECTED'
 D = 'DISCONNECTED'
 
 
-
 def seconds_to_datetime(seconds: int):
     sec = timedelta(seconds=seconds)
     d = datetime(1, 1, 1) + sec
@@ -27,6 +26,12 @@ def seconds_to_datetime(seconds: int):
 class Console(object):
     """
     Main console for managing Chainalytic services
+
+    Service IDs:
+        0: Upstream
+        1: Aggregator
+        2: Warehouse
+        3: Provider
 
     Properties:
         working_dir (str):
@@ -83,139 +88,105 @@ class Console(object):
             and self.provider_endpoint
         )
 
-    def cleanup_services(self, endpoint: str = None):
+    @property
+    def sid(self):
+        sid_info = {
+            '0': {
+                'endpoint': self.upstream_endpoint,
+                'name': 'Upstream',
+                'py_pkg': 'chainalytic.upstream',
+            },
+            '1': {
+                'endpoint': self.aggregator_endpoint,
+                'name': 'Aggregator',
+                'py_pkg': 'chainalytic.aggregator',
+            },
+            '2': {
+                'endpoint': self.warehouse_endpoint,
+                'name': 'Warehouse',
+                'py_pkg': 'chainalytic.warehouse',
+            },
+            '3': {
+                'endpoint': self.provider_endpoint,
+                'name': 'Provider',
+                'py_pkg': 'chainalytic.provider',
+            },
+        }
+        return sid_info
+
+    def cleanup_services(self, service_id: Optional[str] = None):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
         print('Cleaning up services...')
         cleaned = 0
-        if endpoint:
-            all_endpoints = [endpoint]
-        else:
-            all_endpoints = [
-                self.provider_endpoint,
-                self.aggregator_endpoint,
-                self.upstream_endpoint,
-                self.warehouse_endpoint,
-            ]
 
-        for service in all_endpoints:
-            if service == self.provider_endpoint:
-                r = rpc_client.call_aiohttp(service, call_id='ping')
+        if service_id:
+            all_sid = [service_id] if service_id in self.sid else []
+        else:
+            all_sid = self.sid
+
+        for i in all_sid:
+            if i == '3':
+                r = rpc_client.call_aiohttp(self.sid[i]['endpoint'], call_id='ping')
                 if r['status']:
-                    rpc_client.call_aiohttp(service, call_id='exit')
+                    rpc_client.call_aiohttp(self.sid[i]['endpoint'], call_id='exit')
             else:
-                r = rpc_client.call(service, call_id='exit')
+                r = rpc_client.call(self.sid[i]['endpoint'], call_id='exit')
 
             if r['status']:
                 cleaned = 1
-                print(f'----Cleaned service endpoint: {service}')
+                print(
+                    f'----Cleaned {self.sid[i]["name"]} service endpoint: {self.sid[i]["endpoint"]}'
+                )
 
         print('Cleaned all Chainalytic services' if cleaned else 'Nothing to clean')
 
-    def init_services(self, force_restart: bool = 0):
+    def init_services(self, service_id: Optional[str] = None, force_restart: Optional[bool] = 0):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
         if force_restart:
             self.cleanup_services()
 
         print('Initializing Chainalytic services...')
+        print()
         python_exe = sys.executable
+
+        if service_id:
+            all_sid = [service_id] if service_id in self.sid else []
+            if not all_sid:
+                raise Exception('Invalid service ID')
+        else:
+            all_sid = self.sid
 
         sudo = ['sudo', '-S'] if 'SUDO_PWD' in os.environ else []
         echo_pwd = ['echo', os.environ['SUDO_PWD']] if 'SUDO_PWD' in os.environ else []
 
-        if not rpc_client.call(self.upstream_endpoint, call_id='ping')['status']:
-            echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
-            upstream_cmd = sudo + [
-                python_exe,
-                '-m',
-                'chainalytic.upstream',
-                '--endpoint',
-                self.upstream_endpoint,
-                '--zone_id',
-                'public-icon',
-                '--working_dir',
-                os.getcwd(),
-            ]
-            subprocess.Popen(
-                upstream_cmd,
-                stdin=echo.stdout if echo else None,
-                stdout=DEVNULL,
-                stderr=STDOUT,
-                start_new_session=True,
-            )
-            print(f'Started Upstream service: {" ".join(upstream_cmd)}')
-            print()
+        for i in all_sid:
+            if not rpc_client.call(self.sid[i]['endpoint'], call_id='ping')['status']:
+                echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
+                cmd = sudo + [
+                    python_exe,
+                    '-m',
+                    self.sid[i]['py_pkg'],
+                    '--endpoint',
+                    self.sid[i]['endpoint'],
+                    '--zone_id',
+                    'public-icon',
+                    '--working_dir',
+                    os.getcwd(),
+                ]
+                subprocess.Popen(
+                    cmd,
+                    stdin=echo.stdout if echo else None,
+                    stdout=DEVNULL,
+                    stderr=STDOUT,
+                    start_new_session=True,
+                )
+                print(f'----Started {self.sid[i]["name"]} service: {" ".join(cmd)}')
+                print()
 
-        if not rpc_client.call(self.warehouse_endpoint, call_id='ping')['status']:
-            echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
-            warehouse_cmd = sudo + [
-                python_exe,
-                '-m',
-                'chainalytic.warehouse',
-                '--endpoint',
-                self.warehouse_endpoint,
-                '--zone_id',
-                'public-icon',
-                '--working_dir',
-                os.getcwd(),
-            ]
-            subprocess.Popen(
-                warehouse_cmd,
-                stdin=echo.stdout if echo else None,
-                stdout=DEVNULL,
-                stderr=STDOUT,
-                start_new_session=True,
-            )
-            print(f'Started Warehouse service: {" ".join(warehouse_cmd)}')
-            print()
-
-        if not rpc_client.call(self.aggregator_endpoint, call_id='ping')['status']:
-            echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
-            aggregator_cmd = sudo + [
-                python_exe,
-                '-m',
-                'chainalytic.aggregator',
-                '--endpoint',
-                self.aggregator_endpoint,
-                '--zone_id',
-                'public-icon',
-                '--working_dir',
-                os.getcwd(),
-            ]
-            subprocess.Popen(
-                aggregator_cmd,
-                stdin=echo.stdout if echo else None,
-                stdout=DEVNULL,
-                stderr=STDOUT,
-                start_new_session=True,
-            )
-            print(f'Started Aggregator service: {" ".join(aggregator_cmd)}')
-            print()
-
-        if not rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']:
-            echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
-            provider_cmd = sudo + [
-                python_exe,
-                '-m',
-                'chainalytic.provider',
-                '--endpoint',
-                self.provider_endpoint,
-                '--zone_id',
-                'public-icon',
-                '--working_dir',
-                os.getcwd(),
-            ]
-            subprocess.Popen(
-                provider_cmd,
-                stdin=echo.stdout if echo else None,
-                stdout=DEVNULL,
-                stderr=STDOUT,
-                start_new_session=True,
-            )
-            print(f'Started Provider service: {" ".join(provider_cmd)}')
-            print()
-        print('Initialized all services')
+        if not all_sid:
+            print('No service initialized')
         print()
 
     def monitor(self, refresh_time: float = 1.0):
