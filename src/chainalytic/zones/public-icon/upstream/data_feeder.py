@@ -60,8 +60,11 @@ class DataFeeder(BaseDataFeeder):
 
             if height < V3_BLOCK_HEIGHT:
                 txs = block['confirmed_transaction_list']
+                timestamp = block['time_stamp']
             else:
                 txs = block['transactions']
+                timestamp = int(block['timestamp'], 16)
+
         except Exception:
             if verbose:
                 print('--ERROR in block data loading, skipped feeding')
@@ -98,7 +101,7 @@ class DataFeeder(BaseDataFeeder):
             print(f'Total feeding time: {round(time() - t1, 4)}s')
             print()
 
-        return set_stake_wallets
+        return {'data': set_stake_wallets, 'timestamp': timestamp}
 
     async def last_block_height(self) -> Optional[int]:
         """Get last block height from chain
