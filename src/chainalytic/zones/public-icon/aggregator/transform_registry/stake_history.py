@@ -33,12 +33,7 @@ class Transform(BaseTransform):
     def __init__(self, working_dir: str, zone_id: str, transform_id: str):
         super(Transform, self).__init__(working_dir, zone_id, transform_id)
 
-    def _get_total_supply(self) -> int:
-        db = plyvel.DB(self.kernel.score_db_icondex_dir)
-        r = db.get(b'total_supply')
-        return int.from_bytes(r, 'big') / 10 ** 18
-
-    async def execute(self, height: int, input_data: list) -> Optional[Dict]:
+    async def execute(self, height: int, input_data: dict) -> Optional[Dict]:
         start_time = time.time()
 
         # Load transform cache to retrive previous staking state
@@ -105,6 +100,8 @@ class Transform(BaseTransform):
         #
         set_stake_wallets = input_data['data']
         timestamp = input_data['timestamp']
+        total_supply = input_data['total_supply']
+
         for addr in set_stake_wallets:
             addr_data = cache_db.get(addr.encode())
 
@@ -133,7 +130,7 @@ class Transform(BaseTransform):
 
                 else:
                     cur_unstaking_value = prev_stake_value - cur_stake_value
-                unlock_height = height + unlock_period(prev_total_staking, self._get_total_supply())
+                unlock_height = height + unlock_period(prev_total_staking, total_supply)
 
             # Restake
             else:
@@ -170,8 +167,12 @@ class Transform(BaseTransform):
         cache_db_batch.put(Transform.LAST_STATE_HEIGHT_KEY, str(height).encode())
         cache_db_batch.put(Transform.LAST_TOTAL_STAKING_KEY, str(total_staking).encode())
         cache_db_batch.put(Transform.LAST_TOTAL_UNSTAKING_KEY, str(total_unstaking).encode())
-        cache_db_batch.put(Transform.LAST_TOTAL_STAKING_WALLETS_KEY, str(total_staking_wallets).encode())
-        cache_db_batch.put(Transform.LAST_TOTAL_UNSTAKING_WALLETS_KEY, str(total_unstaking_wallets).encode())
+        cache_db_batch.put(
+            Transform.LAST_TOTAL_STAKING_WALLETS_KEY, str(total_staking_wallets).encode()
+        )
+        cache_db_batch.put(
+            Transform.LAST_TOTAL_UNSTAKING_WALLETS_KEY, str(total_unstaking_wallets).encode()
+        )
         cache_db_batch.write()
 
         execution_time = f'{round(time.time()-start_time, 4)}s'

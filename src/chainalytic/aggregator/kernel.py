@@ -25,7 +25,6 @@ class BaseKernel(object):
         self.zone_id = zone_id
         self.transforms = {}
         self.chain_registry = config.get_chain_registry(working_dir)
-
         self.warehouse_endpoint = config.get_setting(working_dir)['warehouse_endpoint']
 
     def add_transform(self, transform: 'Transform'):

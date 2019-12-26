@@ -13,7 +13,8 @@ deps = {
         'websockets',
         'aiohttp',
         'iconservice',
-        'requests'
+        'requests',
+        'iconsdk'
     ],
     'test': [
         'pytest',

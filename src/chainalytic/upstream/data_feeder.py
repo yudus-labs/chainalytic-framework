@@ -13,10 +13,9 @@ class BaseDataFeeder(object):
     Properties:
         working_dir (str):
         zone_id (str):
-        client_endpoint (str):
-        chain_db_dir (str):
-        chain_db (plyvel.DB):
-    
+        zone (dict):
+        direct_db_access (bool):
+
     Methods:
         get_block(height: int) -> Optional[Dict]
 
@@ -26,12 +25,8 @@ class BaseDataFeeder(object):
         super(BaseDataFeeder, self).__init__()
         self.working_dir = working_dir
         self.zone_id = zone_id
-        zone = zone_manager.get_zone(working_dir, zone_id)
-        self.client_endpoint = zone['client_endpoint'] if zone else ''
-        self.chain_db_dir = zone['chain_db_dir'] if zone else ''
-
-        assert Path(self.chain_db_dir).exists(), f'Chain DB does not exist: {self.chain_db_dir}'
-        self.chain_db = plyvel.DB(self.chain_db_dir)
+        self.zone = zone_manager.get_zone(working_dir, zone_id)
+        self.direct_db_access = self.zone['direct_db_access']
 
     async def get_block(self, height: int) -> Optional[Collection]:
         """Retrieve standard block data from chain

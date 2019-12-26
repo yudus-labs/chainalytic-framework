@@ -6,6 +6,8 @@ from time import time
 from typing import Dict, List, Optional, Set, Tuple
 
 import plyvel
+from iconsdk.icon_service import IconService
+from iconsdk.providers.http_provider import HTTPProvider
 
 from chainalytic.common import config, zone_manager
 from chainalytic.upstream.data_feeder import BaseDataFeeder
@@ -25,40 +27,53 @@ class DataFeeder(BaseDataFeeder):
     def __init__(self, working_dir: str, zone_id: str):
         super(DataFeeder, self).__init__(working_dir, zone_id)
 
+        self.client_endpoint = self.zone['client_endpoint'] if self.zone else ''
+        self.chain_db_dir = self.zone['chain_db_dir'] if self.zone else ''
+        self.score_db_icondex_dir = self.zone['score_db_icondex_dir'] if self.zone else ''
+
+        if self.direct_db_access:
+            assert Path(self.chain_db_dir).exists(), f'Chain DB does not exist: {self.chain_db_dir}'
+            self.chain_db = plyvel.DB(self.chain_db_dir)
+            self.score_db_icondex_db = plyvel.DB(self.score_db_icondex_dir)
+        else:
+            self.icon_service = IconService(HTTPProvider(f"http://{self.client_endpoint}", 3))
+            self.icon_service.get_total_supply()
+
+    def _get_total_supply(self):
+        if self.direct_db_access:
+            r = self.score_db_icondex_db.get(b'total_supply')
+            return int.from_bytes(r, 'big') / 10 ** 18
+        else:
+            return self.icon_service.get_total_supply() / 10 ** 18
+
+    def _get_block(self, height: int) -> Optional[Dict]:
+        if self.direct_db_access:
+            heightkey = BLOCK_HEIGHT_KEY + height.to_bytes(BLOCK_HEIGHT_BYTES_LEN, byteorder='big')
+            block_hash = self.chain_db.get(heightkey)
+
+            if not block_hash:
+                return None
+
+            data = self.chain_db.get(block_hash)
+            try:
+                return json.loads(data)
+            except:
+                return None
+        else:
+            return self.icon_service.get_block(height)
+
     async def get_block(self, height: int, verbose: bool = 0) -> Optional[dict]:
         """Retrieve standard block data from chain
         """
         if verbose:
             print(f'Feeding block: {height}')
 
-        t1 = time()
-        db = self.chain_db
-        if verbose:
-            print(f'--Time to init leveldb: {round(time() - t1, 4)}s')
-
-        t11 = time()
-        heightkey = BLOCK_HEIGHT_KEY + height.to_bytes(BLOCK_HEIGHT_BYTES_LEN, byteorder='big')
-        block_hash = db.get(heightkey)
-        if verbose:
-            print(f'--Time to find block hash: {round(time() - t11, 4)}s')
-
-        if not block_hash:
-            if verbose:
-                print(f'--WARNING: block hash not found: {heightkey}')
+        block = self._get_block(height)
+        if not block:
             return None
 
         try:
-            t2 = time()
-            data = db.get(block_hash)
-            if verbose:
-                print(f'--Time to load block from leveldb: {round(time() - t2, 4)}s')
-
-            t3 = time()
-            block = json.loads(data)
-            if verbose:
-                print(f'--Time to convert data: {round(time() - t3, 4)}s')
-
-            if height < V3_BLOCK_HEIGHT:
+            if height < V3_BLOCK_HEIGHT or not self.direct_db_access:
                 txs = block['confirmed_transaction_list']
                 timestamp = block['time_stamp']
             else:
@@ -70,11 +85,7 @@ class DataFeeder(BaseDataFeeder):
                 print('--ERROR in block data loading, skipped feeding')
             return None
 
-        if verbose:
-            print(f'Total time to load data: {round(time() - t1, 4)}s')
-
         try:
-            t4 = time()
             set_stake_wallets = {}
             for tx in txs:
                 if 'data' not in tx:
@@ -87,9 +98,6 @@ class DataFeeder(BaseDataFeeder):
                         set_stake_wallets[tx["from"]] = stake_value
                     except ValueError:
                         pass
-            if verbose:
-                print(f'Time to pre-process data: {round(time() - t4, 4)}s')
-
         except Exception as e:
             if verbose:
                 print('ERROR in data pre-processing')
@@ -97,19 +105,21 @@ class DataFeeder(BaseDataFeeder):
                 print(traceback.format_exc())
             return None
 
-        if verbose:
-            print(f'Total feeding time: {round(time() - t1, 4)}s')
-            print()
-
-        return {'data': set_stake_wallets, 'timestamp': timestamp}
+        return {
+            'data': set_stake_wallets,
+            'timestamp': timestamp,
+            'total_supply': self._get_total_supply(),
+        }
 
     async def last_block_height(self) -> Optional[int]:
         """Get last block height from chain
         """
-        db = self.chain_db
 
-        block_hash = db.get(DataFeeder.LAST_BLOCK_KEY)
-        data = db.get(block_hash)
-        if data:
-            block = json.loads(data)
-            return int(block['height'], 16)
+        if self.direct_db_access:
+            block_hash = self.chain_db.get(DataFeeder.LAST_BLOCK_KEY)
+            data = self.chain_db.get(block_hash)
+            if data:
+                block = json.loads(data)
+                return int(block['height'], 16)
+        else:
+            return self.icon_service.get_block('latest')['height']

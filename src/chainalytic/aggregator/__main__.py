@@ -95,6 +95,8 @@ async def fetch_data():
                         transform_id=tid,
                     )
                     print(f'--Executed block "{next_block_height}" successfully')
+                else:
+                    print('--Failed to fetch, trying again...')
             print('--')
         agg_time = round(time() - t1, 4)
         print(f'Total aggregation time: {agg_time}s')

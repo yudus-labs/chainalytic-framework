@@ -1,10 +1,12 @@
 zones:
   - zone_id: 'public-icon'
     zone_name: 'Public ICON mainnet'
-    client_endpoint: 'https://ctz.solidwallet.io'
+    client_endpoint: 'localhost:9000'
     chain_db_dir: ''
     score_db_icondex_dir: ''
+    direct_db_access: 0
   - zone_id: 'public-ethereum'
     zone_name: 'Public Ethereum mainnet'
     client_endpoint: ''
     chain_db_dir: ''
+    direct_db_access: 0
