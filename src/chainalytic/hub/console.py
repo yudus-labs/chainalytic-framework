@@ -208,6 +208,13 @@ class Console(object):
             latest_block_height = 0
             prev_last_block = 0
             prev_time = time.time()
+
+            last_block = 0
+            total_staking = 0
+            total_unstaking = 0
+            total_staking_wallets = 0
+            total_unstaking_wallets = 0
+
             while 1:
                 upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')[
                     'status'
@@ -226,12 +233,6 @@ class Console(object):
                     )
                     if upstream_response['status']:
                         latest_block_height = upstream_response['data']
-
-                last_block = 0
-                total_staking = 0
-                total_unstaking = 0
-                total_staking_wallets = 0
-                total_unstaking_wallets = 0
 
                 if (
                     upstream_connected

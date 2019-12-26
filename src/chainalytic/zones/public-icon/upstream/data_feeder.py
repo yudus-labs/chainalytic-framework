@@ -60,7 +60,10 @@ class DataFeeder(BaseDataFeeder):
             except:
                 return None
         else:
-            return self.icon_service.get_block(height)
+            try:
+                return self.icon_service.get_block(height)
+            except:
+                return None
 
     async def get_block(self, height: int, verbose: bool = 0) -> Optional[dict]:
         """Retrieve standard block data from chain
