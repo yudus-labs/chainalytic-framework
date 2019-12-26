@@ -231,6 +231,7 @@ class Console(object):
                 total_staking = 0
                 total_unstaking = 0
                 total_staking_wallets = 0
+                total_unstaking_wallets = 0
 
                 if (
                     upstream_connected
@@ -259,6 +260,7 @@ class Console(object):
                         total_staking = round(r2['total_staking'], 2)
                         total_unstaking = round(r2['total_unstaking'], 2)
                         total_staking_wallets = round(r2['total_staking_wallets'], 2)
+                        total_unstaking_wallets = round(r2['total_unstaking_wallets'], 2)
 
                 speed = int((last_block - prev_last_block) / (time.time() - prev_time))
                 prev_last_block = last_block
@@ -296,9 +298,10 @@ class Console(object):
                 stdscr.addstr(10, 0, f'Remaining blocks:         {remaining_blocks:,}')
                 stdscr.addstr(11, 0, f'Estimated time remaining: {remaining_time}')
                 stdscr.addstr(12, 0, f'----')
-                stdscr.addstr(13, 0, f'Total staking:         {total_staking:,}')
-                stdscr.addstr(14, 0, f'Total unstaking:       {total_unstaking:,}')
-                stdscr.addstr(15, 0, f'Total staking wallets: {total_staking_wallets:,}')
+                stdscr.addstr(13, 0, f'Total staking:           {total_staking:,}')
+                stdscr.addstr(14, 0, f'Total unstaking:         {total_unstaking:,}')
+                stdscr.addstr(15, 0, f'Total staking wallets:   {total_staking_wallets:,}')
+                stdscr.addstr(16, 0, f'Total unstaking wallets: {total_unstaking_wallets:,}')
                 stdscr.refresh()
 
                 time.sleep(refresh_time)
