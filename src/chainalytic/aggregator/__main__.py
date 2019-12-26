@@ -9,8 +9,7 @@ from jsonrpcclient.clients.websockets_client import WebSocketsClient
 from jsonrpcserver import method
 
 from chainalytic.common import config, rpc_client
-from chainalytic.common.rpc_server import (EXIT_SERVICE, main_dispatcher,
-                                           show_call_info)
+from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 
 from . import Aggregator
 
@@ -38,16 +37,21 @@ async def _call(call_id: str, **kwargs):
         return 'Not implemented'
 
 
-async def init_state():
+async def initialize():
     print('Initializing Aggregator service...')
     warehouse_endpoint = _AGGREGATOR.warehouse_endpoint
+
+    print('Waiting for Warehouse service...')
+    warehouse_response = await rpc_client.call_async(warehouse_endpoint, call_id='ping')
+    while not warehouse_response['status']:
+        warehouse_response = await rpc_client.call_async(warehouse_endpoint, call_id='ping')
 
     # Set last_block_height value for the first time
     for tid in _AGGREGATOR.kernel.transforms:
         warehouse_response = await rpc_client.call_async(
             warehouse_endpoint, call_id='last_block_height', transform_id=tid
         )
-        if warehouse_response['status'] and not warehouse_response['data']:
+        if not warehouse_response['data']:
             await rpc_client.call_async(
                 warehouse_endpoint,
                 call_id='set_last_block_height',
@@ -56,6 +60,7 @@ async def init_state():
             )
             print('Set initial last_block_height')
     print('Initialized Aggregator service')
+    print()
 
 
 async def fetch_data():
@@ -106,7 +111,7 @@ def _run_server(endpoint, working_dir, zone_id):
     host = endpoint.split(':')[0]
     port = int(endpoint.split(':')[1])
 
-    asyncio.get_event_loop().run_until_complete(init_state())
+    asyncio.get_event_loop().run_until_complete(initialize())
     asyncio.get_event_loop().create_task(fetch_data())
 
     start_server = websockets.serve(main_dispatcher, host, port)
