@@ -17,8 +17,8 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--refresh-time', help='Refresh time of aggregation monitor')
 
     subparsers = parser.add_subparsers(dest='command')
-    clean_parser = subparsers.add_parser('clean', help='Kill running Chainalytic services')
-    clean_parser.add_argument(
+    stop_parser = subparsers.add_parser('stop', help='Kill running Chainalytic services')
+    stop_parser.add_argument(
         'sid', nargs='?', default=None, help='Service ID, kill specific service'
     )
 
@@ -26,9 +26,9 @@ if __name__ == '__main__':
     console = Console()
 
     try:
-        if args.command == 'clean':
+        if args.command == 'stop':
             console.load_config()
-            console.cleanup_services(args.sid)
+            console.stop_services(args.sid)
         elif args.init_config:
             console.init_config()
         else:

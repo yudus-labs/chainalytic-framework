@@ -20,7 +20,7 @@ D = 'DISCONNECTED'
 def seconds_to_datetime(seconds: int):
     sec = timedelta(seconds=seconds)
     d = datetime(1, 1, 1) + sec
-    return f'{d.day - 1}d, {d.hour}h, {d.minute}m, {d.second}s'
+    return f'{d.day - 1}d {d.hour}h {d.minute}m {d.second}s'
 
 
 class Console(object):
@@ -42,7 +42,7 @@ class Console(object):
         is_endpoint_set (bool):
 
     Methods:
-        cleanup_services()
+        stop_services()
         init_services()
         monitor()
 
@@ -114,10 +114,10 @@ class Console(object):
         }
         return sid_info
 
-    def cleanup_services(self, service_id: Optional[str] = None):
+    def stop_services(self, service_id: Optional[str] = None):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
-        print('Cleaning up services...')
+        print('Stopping services...')
         cleaned = 0
 
         if service_id:
@@ -136,16 +136,16 @@ class Console(object):
             if r['status']:
                 cleaned = 1
                 print(
-                    f'----Cleaned {self.sid[i]["name"]} service endpoint: {self.sid[i]["endpoint"]}'
+                    f'----Stopped {self.sid[i]["name"]} service endpoint: {self.sid[i]["endpoint"]}'
                 )
 
-        print('Cleaned all Chainalytic services' if cleaned else 'Nothing to clean')
+        print('Stopped all Chainalytic services' if cleaned else 'Nothing to stop')
 
     def init_services(self, service_id: Optional[str] = None, force_restart: Optional[bool] = 0):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
         if force_restart:
-            self.cleanup_services()
+            self.stop_services()
 
         print('Initializing Chainalytic services...')
         print()
@@ -253,7 +253,7 @@ class Console(object):
                         api_params={'transform_id': 'stake_history'},
                     )
                     if res.data.result['result']:
-                        r2 = json.loads(res.data.result['result'])
+                        r2 = res.data.result['result']
 
                         last_block = r1["result"]
                         total_staking = round(r2['total_staking'], 2)
