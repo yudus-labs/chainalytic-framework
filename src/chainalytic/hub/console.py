@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from pprint import pprint
-from subprocess import DEVNULL, STDOUT, PIPE
+from subprocess import DEVNULL, PIPE, STDOUT
 from typing import Optional
 
 from jsonrpcclient.clients.http_client import HTTPClient
@@ -17,10 +17,11 @@ C = 'CONNECTED'
 D = 'DISCONNECTED'
 
 
+
 def seconds_to_datetime(seconds: int):
     sec = timedelta(seconds=seconds)
     d = datetime(1, 1, 1) + sec
-    return f'{d.day - 1} days, {d.hour} hours, {d.minute} minutes, {d.second} seconds'
+    return f'{d.day - 1}d, {d.hour}h, {d.minute}m, {d.second}s'
 
 
 class Console(object):
@@ -292,12 +293,18 @@ class Console(object):
                 prev_last_block = last_block
                 prev_time = time.time()
 
-                if latest_block_height > 0 and speed > 0:
+                if latest_block_height > last_block > 0 and speed > 0:
                     remaining_time = seconds_to_datetime((latest_block_height - last_block) / speed)
                 elif latest_block_height == last_block and last_block > 0:
                     remaining_time = 'Fully synced'
+                elif latest_block_height < last_block:
+                    remaining_time = (
+                        'Upstream block height is lower than latest aggregated block (out-of-date)'
+                    )
                 else:
                     remaining_time = 'N/A'
+
+                remaining_blocks = abs(latest_block_height - last_block)
 
                 c1 = C if upstream_connected else D
                 c2 = C if aggregator_connected else D
@@ -312,14 +319,15 @@ class Console(object):
                 stdscr.addstr(4, 0, f'Provider service:   {self.provider_endpoint} {c4}')
                 stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
                 stdscr.addstr(6, 0, f'----')
-                stdscr.addstr(7, 0, f'Latest block upstream chain: {latest_block_height:,}')
-                stdscr.addstr(8, 0, f'Latest aggregated block:     {last_block:,}')
-                stdscr.addstr(9, 0, f'Data aggregation speed:      {speed} blocks/s')
-                stdscr.addstr(10, 0, f'Estimated time remaining:    {remaining_time}')
-                stdscr.addstr(11, 0, f'----')
-                stdscr.addstr(12, 0, f'Total staking:         {total_staking:,}')
-                stdscr.addstr(13, 0, f'Total unstaking:       {total_unstaking:,}')
-                stdscr.addstr(14, 0, f'Total staking wallets: {total_staking_wallets:,}')
+                stdscr.addstr(7, 0, f'Latest upstream block:    {latest_block_height:,}')
+                stdscr.addstr(8, 0, f'Latest aggregated block:  {last_block:,}')
+                stdscr.addstr(9, 0, f'Data aggregation speed:   {speed} blocks/s')
+                stdscr.addstr(10, 0, f'Remaining blocks:         {remaining_blocks:,}')
+                stdscr.addstr(11, 0, f'Estimated time remaining: {remaining_time}')
+                stdscr.addstr(12, 0, f'----')
+                stdscr.addstr(13, 0, f'Total staking:         {total_staking:,}')
+                stdscr.addstr(14, 0, f'Total unstaking:       {total_unstaking:,}')
+                stdscr.addstr(15, 0, f'Total staking wallets: {total_staking_wallets:,}')
                 stdscr.refresh()
 
                 time.sleep(refresh_time)
