@@ -175,6 +175,14 @@ class Transform(BaseTransform):
         )
         cache_db_batch.write()
 
+        unstake_wallets = {}
+        for addr in unstaking_addresses:
+            addr_data = cache_db.get(addr.encode())
+            stake_value, unstaking_value, unlock_height = addr_data.split(b':')
+            unstake_wallets[
+                addr
+            ] = f'{stake_value.decode()}:{unstaking_value.decode()}:{unlock_height.decode()}'
+
         execution_time = f'{round(time.time()-start_time, 4)}s'
 
         data = {
@@ -186,4 +194,8 @@ class Transform(BaseTransform):
             'timestamp': timestamp,
         }
 
-        return {'height': height, 'data': data}
+        return {
+            'height': height,
+            'data': data,
+            'misc': {'latest_unstake_state': {'wallets': unstake_wallets, 'height': height}},
+        }

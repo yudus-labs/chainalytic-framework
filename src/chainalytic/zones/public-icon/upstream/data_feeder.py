@@ -52,6 +52,7 @@ class DataFeeder(BaseDataFeeder):
             block_hash = self.chain_db.get(heightkey)
 
             if not block_hash:
+                print('Block hash not found')
                 return None
 
             data = self.chain_db.get(block_hash)
@@ -73,6 +74,8 @@ class DataFeeder(BaseDataFeeder):
 
         block = self._get_block(height)
         if not block:
+            if verbose:
+                print('--Block not found')
             return None
 
         try:

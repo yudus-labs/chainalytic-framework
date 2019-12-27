@@ -1,6 +1,6 @@
 import json
 from typing import Dict, List, Optional, Set, Tuple, Union
-
+from pprint import pprint
 from chainalytic.common import config, rpc_client
 from chainalytic.provider.collator import BaseCollator
 
@@ -30,6 +30,19 @@ class Collator(BaseCollator):
         if r['status'] and r['data']:
             try:
                 return int(r['data'])
+            except:
+                return None
+        else:
+            return None
+
+    async def latest_unstake_state(self, transform_id: str) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint, call_id='latest_unstake_state', transform_id=transform_id
+        )
+        pprint(r)
+        if r['status'] and r['data']:
+            try:
+                return json.loads(r['data'])
             except:
                 return None
         else:

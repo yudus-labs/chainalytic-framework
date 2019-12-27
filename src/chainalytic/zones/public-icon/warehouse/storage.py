@@ -9,6 +9,8 @@ from chainalytic.warehouse.storage import BaseStorage
 
 
 class Storage(BaseStorage):
+    LATEST_UNSTAKE_STATE_KEY = b'latest_unstake_state'
+
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
 
@@ -76,3 +78,16 @@ class Storage(BaseStorage):
         db.put(Storage.LAST_BLOCK_HEIGHT_KEY, value)
 
         return 1
+
+    async def set_latest_unstake_state(self, unstake_state: dict, transform_id: str) -> bool:
+        db = self.transform_storage_dbs[transform_id]
+        db.put(Storage.LATEST_UNSTAKE_STATE_KEY, value=json.dumps(unstake_state).encode())
+
+        return 1
+
+    async def latest_unstake_state(self, transform_id: str) -> Optional[str]:
+        db = self.transform_storage_dbs[transform_id]
+        value = db.get(Storage.LATEST_UNSTAKE_STATE_KEY)
+        value = value.decode() if value else value
+
+        return value

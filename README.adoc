@@ -163,3 +163,18 @@ get_staking_info
   	"jsonrpc": "2.0"
 }
 ----
+
+latest_unstake_state
+[source]
+----
+{
+    "method": "_call",
+    "params": {
+        "call_id": "api_call",
+        "api_id": "latest_unstake_state",
+        "api_params": {"transform_id": "stake_history"}
+    },
+    "id": 123,
+  	"jsonrpc": "2.0"
+}
+----

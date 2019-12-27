@@ -52,6 +52,7 @@ async def _call(call_id: str, **kwargs):
         height = params['height']
         transform_id = params['transform_id']
         return await _WAREHOUSE.storage.get_block(height, transform_id)
+
     elif call_id == 'last_block_height':
         transform_id = params['transform_id']
         return await _WAREHOUSE.storage.last_block_height(transform_id)
@@ -59,6 +60,15 @@ async def _call(call_id: str, **kwargs):
         height = params['height']
         transform_id = params['transform_id']
         return await _WAREHOUSE.storage.set_last_block_height(height, transform_id)
+
+    elif call_id == 'latest_unstake_state':
+        transform_id = params['transform_id']
+        return await _WAREHOUSE.storage.latest_unstake_state(transform_id)
+    elif call_id == 'set_latest_unstake_state':
+        unstake_state = params['unstake_state']
+        transform_id = params['transform_id']
+        return await _WAREHOUSE.storage.set_latest_unstake_state(unstake_state, transform_id)
+
     else:
         return f'Not implemented'
 

@@ -49,4 +49,10 @@ class ApiBundle(BaseApiBundle):
     async def get_staking_info_last_block(self, api_params: dict) -> Optional[Dict]:
         height = await self.collator.last_block_height('stake_history')
         if height:
-            return await self.collator.get_block(height, 'stake_history')
+            r = await self.collator.get_block(height, 'stake_history')
+            r['height'] = height
+            return r
+
+    async def latest_unstake_state(self, api_params: dict) -> Optional[int]:
+        if 'transform_id' in api_params:
+            return await self.collator.latest_unstake_state(api_params['transform_id'])
