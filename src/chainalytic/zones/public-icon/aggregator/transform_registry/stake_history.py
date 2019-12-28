@@ -84,12 +84,9 @@ class Transform(BaseTransform):
         else:
             unstaking_addresses = {}
         for addr in list(unstaking_addresses):
-            if unstaking_addresses[addr] <= height:
+            stake_value, unstaking_value, unlock_height = unstaking_addresses[addr].split(':')
+            if int(unlock_height) <= height:
                 unstaking_addresses.pop(addr)
-
-                addr_data = cache_db.get(addr.encode())
-                stake_value, unstaking_value, unlock_height = addr_data.split(b':')
-                stake_value = float(stake_value)
                 cache_db_batch.put(addr.encode(), f'{stake_value}:0:0'.encode())
 
         cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
@@ -156,7 +153,9 @@ class Transform(BaseTransform):
                     unstaking_addresses = json.loads(unstaking_addresses)
                 else:
                     unstaking_addresses = {}
-                unstaking_addresses[addr] = unlock_height
+                unstaking_addresses[
+                    addr
+                ] = f'{cur_stake_value}:{cur_unstaking_value}:{unlock_height}'
                 cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
 
             # Update total staking and unstaking
@@ -175,15 +174,10 @@ class Transform(BaseTransform):
         cache_db_batch.write()
 
         # Calculate latest total unstaking and unstake state
-        unstake_wallets = {}
         total_unstaking = 0
         for addr in unstaking_addresses:
-            addr_data = cache_db.get(addr.encode())
-            stake_value, unstaking_value, unlock_height = addr_data.split(b':')
-            unstake_wallets[
-                addr
-            ] = f'{stake_value.decode()}:{unstaking_value.decode()}:{unlock_height.decode()}'
-            total_unstaking += float(unstaking_value.decode())
+            stake_value, unstaking_value, unlock_height = unstaking_addresses[addr].split(':')
+            total_unstaking += float(unstaking_value)
 
         execution_time = f'{round(time.time()-start_time, 4)}s'
 
@@ -199,5 +193,5 @@ class Transform(BaseTransform):
         return {
             'height': height,
             'data': data,
-            'misc': {'latest_unstake_state': {'wallets': unstake_wallets, 'height': height}},
+            'misc': {'latest_unstake_state': {'wallets': unstaking_addresses, 'height': height}},
         }
