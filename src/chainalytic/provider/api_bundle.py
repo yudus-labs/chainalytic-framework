@@ -18,8 +18,7 @@ class BaseApiBundle(object):
 
     Methods:
         set_collator(collator: BaseCollator)
-        register_api(api_id, func: Callable)
-        api_call(api_id: str, params: dict) -> Dict
+        api_call(api_id: str, api_params: dict) -> Dict
  
     """
 

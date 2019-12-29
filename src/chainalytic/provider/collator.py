@@ -13,7 +13,7 @@ class BaseCollator(object):
         warehouse_endpoint (str):
 
     Methods:
-        get_block(height: int, transform_id: str) -> Optional[Union[Dict, str]]
+        None
 
     """
 
@@ -23,7 +23,3 @@ class BaseCollator(object):
         self.zone_id = zone_id
         self.warehouse_endpoint = config.get_setting(working_dir)['warehouse_endpoint']
 
-    async def get_block(
-        self, height: int, transform_id: str
-    ) -> Optional[Union[Dict, str, float, int, bytes]]:
-        return {}

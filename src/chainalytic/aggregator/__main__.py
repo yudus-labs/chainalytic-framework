@@ -49,14 +49,17 @@ async def initialize():
     # Set last_block_height value for the first time
     for tid in _AGGREGATOR.kernel.transforms:
         warehouse_response = await rpc_client.call_async(
-            warehouse_endpoint, call_id='last_block_height', transform_id=tid
+            warehouse_endpoint,
+            call_id='api_call',
+            api_id='last_block_height',
+            api_params={'transform_id': tid},
         )
         if not warehouse_response['data']:
             await rpc_client.call_async(
                 warehouse_endpoint,
-                call_id='set_last_block_height',
-                height=_AGGREGATOR.kernel.START_BLOCK_HEIGHT,
-                transform_id=tid,
+                call_id='api_call',
+                api_id='set_last_block_height',
+                api_params={'height': _AGGREGATOR.kernel.START_BLOCK_HEIGHT, 'transform_id': tid},
             )
             print('Set initial last_block_height')
     print('Initialized Aggregator service')
@@ -76,7 +79,10 @@ async def fetch_data():
             print(f'----From Upstream: {upstream_endpoint}')
 
             warehouse_response = await rpc_client.call_async(
-                warehouse_endpoint, call_id='last_block_height', transform_id=tid
+                warehouse_endpoint,
+                call_id='api_call',
+                api_id='last_block_height',
+                api_params={'transform_id': tid},
             )
             print(f'----Last block height: {warehouse_response["data"]}')
 

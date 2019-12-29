@@ -47,9 +47,9 @@ class Transform(BaseTransform):
             if prev_state_height != height - 1:
                 await rpc_client.call_async(
                     self.warehouse_endpoint,
-                    call_id='set_last_block_height',
-                    height=prev_state_height,
-                    transform_id=self.transform_id,
+                    call_id='api_call',
+                    api_id='set_last_block_height',
+                    api_params={'height': prev_state_height, 'transform_id': self.transform_id},
                 )
                 return None
 

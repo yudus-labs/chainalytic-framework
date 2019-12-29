@@ -162,7 +162,11 @@ class Console(object):
         echo_pwd = ['echo', os.environ['SUDO_PWD']] if 'SUDO_PWD' in os.environ else []
 
         for i in all_sid:
-            if not rpc_client.call(self.sid[i]['endpoint'], call_id='ping')['status']:
+            if i == '3':
+                pong = rpc_client.call_aiohttp(self.sid[i]['endpoint'], call_id='ping')['status']
+            else:
+                pong = rpc_client.call(self.sid[i]['endpoint'], call_id='ping')['status']
+            if not pong:
                 echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
                 cmd = sudo + [
                     python_exe,

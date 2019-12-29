@@ -20,15 +20,21 @@ class Kernel(BaseKernel):
                 return 0
             r = await rpc_client.call_async(
                 self.warehouse_endpoint,
-                call_id='put_block',
-                height=output['height'],
-                data=output['data'],
-                transform_id=transform_id,
+                call_id='api_call',
+                api_id='put_block',
+                api_params={
+                    'height': output['height'],
+                    'data': output['data'],
+                    'transform_id': transform_id,
+                },
             )
             r2 = await rpc_client.call_async(
                 self.warehouse_endpoint,
-                call_id='set_latest_unstake_state',
-                unstake_state=output['misc']['latest_unstake_state'],
-                transform_id=transform_id,
+                call_id='api_call',
+                api_id='set_latest_unstake_state',
+                api_params={
+                    'unstake_state': output['misc']['latest_unstake_state'],
+                    'transform_id': transform_id,
+                },
             )
             return r['status'] and r2['status']

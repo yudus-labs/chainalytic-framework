@@ -40,9 +40,12 @@ class BaseKernel(object):
                 return 0
             r = await rpc_client.call_async(
                 self.warehouse_endpoint,
-                call_id='put_block',
-                height=output['height'],
-                data=output['data'],
-                transform_id=transform_id,
+                call_id='api_call',
+                api_id='put_block',
+                api_params={
+                    'height': output['height'],
+                    'data': output['data'],
+                    'transform_id': transform_id,
+                },
             )
             return r['status']

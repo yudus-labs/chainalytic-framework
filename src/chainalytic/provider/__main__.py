@@ -1,23 +1,3 @@
-"""
-Sample service calls
-
-from chainalytic.common import rpc_client
-
-rpc_client.call_aiohttp(
-    f'localhost:5530',
-    call_id='api_call',
-    api_id='get_staking_info',
-    api_params={'height': 999999}
-)
-rpc_client.call_aiohttp(
-    f'localhost:5530',
-    call_id='api_call',
-    api_id='last_block_height',
-    api_params={'transform_id': 'stake_history'}
-)
-
-"""
-
 import argparse
 import asyncio
 import os
@@ -29,8 +9,7 @@ from aiohttp import web
 from jsonrpcserver import async_dispatch as dispatch
 from jsonrpcserver import method
 
-from chainalytic.common.rpc_server import (EXIT_SERVICE, main_dispatcher,
-                                           show_call_info)
+from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 
 from . import Provider
 

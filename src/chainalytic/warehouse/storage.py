@@ -1,6 +1,7 @@
+import traceback
 from pathlib import Path
 from pprint import pprint
-from typing import Collection, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Collection, Dict, List, Optional, Set, Tuple, Union
 
 import plyvel
 
@@ -20,10 +21,7 @@ class BaseStorage(object):
         transform_storage_dbs (dict):
     
     Methods:
-        put_block(height: int, data: dict, transform_id: str) -> bool
-        get_block(self, height: int, transform_id: str) -> Dict
-        last_block_height(transform_id: str) -> int
-        set_last_block_height(height: int, transform_id: str) -> bool
+        api_call(api_id: str, api_params: dict) -> Dict
 
     """
 
@@ -56,23 +54,15 @@ class BaseStorage(object):
             for tid in transforms
         }
 
-    async def put_block(
-        self, height: int, data: Union[Collection, bytes, str, float, int], transform_id: str
-    ) -> bool:
-        """Put block data to one specific transform storage.
-        
-        `last_block_height` value is also updated here
-        """
-        return 1
+    async def api_call(self, api_id: str, api_params: dict) -> Optional[Any]:
+        func = getattr(self, api_id) if hasattr(self, api_id) else None
 
-    async def get_block(self, height: int, transform_id: str) -> Optional[str]:
-        """Get block data from one specific transform storage."""
-        return ''
-
-    async def last_block_height(self, transform_id: str) -> int:
-        """Get last block height in one specific transform storage."""
-        return 1
-
-    async def set_last_block_height(self, height: int, transform_id: str) -> bool:
-        """Set last block height in one specific transform storage."""
-        return 1
+        if func:
+            try:
+                return await func(api_params)
+            except Exception as e:
+                print(f'{str(e)} \n {traceback.format_exc()}')
+                return None
+        else:
+            print(f'Storage API not implemented: {api_id}')
+            return None

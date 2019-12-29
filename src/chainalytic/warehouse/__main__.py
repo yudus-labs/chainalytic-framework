@@ -18,8 +18,7 @@ from pprint import pprint
 import websockets
 from jsonrpcserver import method
 
-from chainalytic.common.rpc_server import (EXIT_SERVICE, main_dispatcher,
-                                           show_call_info)
+from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 
 from . import Warehouse
 
@@ -43,31 +42,11 @@ async def _call(call_id: str, **kwargs):
         return message
     elif call_id == 'exit':
         return EXIT_SERVICE
-    elif call_id == 'put_block':
-        height = params['height']
-        data = params['data']
-        transform_id = params['transform_id']
-        return await _WAREHOUSE.storage.put_block(height, data, transform_id)
-    elif call_id == 'get_block':
-        height = params['height']
-        transform_id = params['transform_id']
-        return await _WAREHOUSE.storage.get_block(height, transform_id)
 
-    elif call_id == 'last_block_height':
-        transform_id = params['transform_id']
-        return await _WAREHOUSE.storage.last_block_height(transform_id)
-    elif call_id == 'set_last_block_height':
-        height = params['height']
-        transform_id = params['transform_id']
-        return await _WAREHOUSE.storage.set_last_block_height(height, transform_id)
-
-    elif call_id == 'latest_unstake_state':
-        transform_id = params['transform_id']
-        return await _WAREHOUSE.storage.latest_unstake_state(transform_id)
-    elif call_id == 'set_latest_unstake_state':
-        unstake_state = params['unstake_state']
-        transform_id = params['transform_id']
-        return await _WAREHOUSE.storage.set_latest_unstake_state(unstake_state, transform_id)
+    elif call_id == 'api_call':
+        api_id = params['api_id']
+        api_params = params['api_params']
+        return await _WAREHOUSE.storage.api_call(api_id, api_params)
 
     else:
         return f'Not implemented'

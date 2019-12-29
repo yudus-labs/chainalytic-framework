@@ -1,6 +1,7 @@
 import json
-from typing import Dict, List, Optional, Set, Tuple, Union
 from pprint import pprint
+from typing import Dict, List, Optional, Set, Tuple, Union
+
 from chainalytic.common import config, rpc_client
 from chainalytic.provider.collator import BaseCollator
 
@@ -13,7 +14,10 @@ class Collator(BaseCollator):
         self, height: int, transform_id: str
     ) -> Optional[Union[Dict, str, float, int, bytes]]:
         r = await rpc_client.call_async(
-            self.warehouse_endpoint, call_id='get_block', height=height, transform_id=transform_id
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='get_block',
+            api_params={'height': height, 'transform_id': transform_id},
         )
         if r['status'] and r['data']:
             try:
@@ -25,7 +29,10 @@ class Collator(BaseCollator):
 
     async def last_block_height(self, transform_id: str) -> Optional[int]:
         r = await rpc_client.call_async(
-            self.warehouse_endpoint, call_id='last_block_height', transform_id=transform_id
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='last_block_height',
+            api_params={'transform_id': transform_id},
         )
         if r['status'] and r['data']:
             try:
@@ -37,7 +44,10 @@ class Collator(BaseCollator):
 
     async def latest_unstake_state(self, transform_id: str) -> Optional[dict]:
         r = await rpc_client.call_async(
-            self.warehouse_endpoint, call_id='latest_unstake_state', transform_id=transform_id
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='latest_unstake_state',
+            api_params={'transform_id': transform_id},
         )
         pprint(r)
         if r['status'] and r['data']:
