@@ -21,7 +21,7 @@ class BaseStorage(object):
         transform_storage_dbs (dict):
     
     Methods:
-        api_call(api_id: str, api_params: dict) -> Dict
+        api_call(api_id: str, api_params: dict) -> Optional[Any]
 
     """
 

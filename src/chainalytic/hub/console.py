@@ -244,28 +244,18 @@ class Console(object):
                     and warehouse_connected
                     and provider_connected
                 ):
-                    res = client.request(
-                        "_call",
-                        call_id='api_call',
-                        api_id='last_block_height',
-                        api_params={'transform_id': 'stake_history'},
-                    )
-                    r1 = res.data.result
-
-                    res = client.request(
+                    r = client.request(
                         "_call",
                         call_id='api_call',
                         api_id='get_staking_info_last_block',
                         api_params={'transform_id': 'stake_history'},
-                    )
-                    if res.data.result['result']:
-                        r2 = res.data.result['result']
-
-                        last_block = r1["result"]
-                        total_staking = round(r2['total_staking'], 2)
-                        total_unstaking = round(r2['total_unstaking'], 2)
-                        total_staking_wallets = round(r2['total_staking_wallets'], 2)
-                        total_unstaking_wallets = round(r2['total_unstaking_wallets'], 2)
+                    ).data.result['result']
+                    if r:
+                        last_block = r['height']
+                        total_staking = round(r['total_staking'], 2)
+                        total_unstaking = round(r['total_unstaking'], 2)
+                        total_staking_wallets = round(r['total_staking_wallets'], 2)
+                        total_unstaking_wallets = round(r['total_unstaking_wallets'], 2)
 
                 speed = int((last_block - prev_last_block) / (time.time() - prev_time))
                 prev_last_block = last_block

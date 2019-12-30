@@ -147,20 +147,25 @@ class Transform(BaseTransform):
             )
 
             # Update unstaking wallets list
-            if unlock_height:
-                unstaking_addresses = cache_db.get(b'unstaking')
-                if unstaking_addresses:
-                    unstaking_addresses = json.loads(unstaking_addresses)
-                else:
-                    unstaking_addresses = {}
+            if cur_unstaking_value > 0:
                 unstaking_addresses[
                     addr
                 ] = f'{cur_stake_value}:{cur_unstaking_value}:{unlock_height}'
-                cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
+            elif addr in unstaking_addresses:
+                unstaking_addresses.pop(addr)
+            cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
 
-            # Update total staking and unstaking
+            # Update total staking
             total_staking = total_staking - prev_stake_value + cur_stake_value
+
+        # Update total unstaking wallets
         total_unstaking_wallets = len(unstaking_addresses)
+
+        # Calculate latest total unstaking
+        total_unstaking = 0
+        for addr in unstaking_addresses:
+            stake_value, unstaking_value, unlock_height = unstaking_addresses[addr].split(':')
+            total_unstaking += float(unstaking_value)
 
         cache_db_batch.put(Transform.LAST_STATE_HEIGHT_KEY, str(height).encode())
         cache_db_batch.put(Transform.LAST_TOTAL_STAKING_KEY, str(total_staking).encode())
@@ -172,12 +177,6 @@ class Transform(BaseTransform):
             Transform.LAST_TOTAL_UNSTAKING_WALLETS_KEY, str(total_unstaking_wallets).encode()
         )
         cache_db_batch.write()
-
-        # Calculate latest total unstaking and unstake state
-        total_unstaking = 0
-        for addr in unstaking_addresses:
-            stake_value, unstaking_value, unlock_height = unstaking_addresses[addr].split(':')
-            total_unstaking += float(unstaking_value)
 
         execution_time = f'{round(time.time()-start_time, 4)}s'
 
