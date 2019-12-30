@@ -14,10 +14,11 @@ class Kernel(BaseKernel):
     async def execute(self, height: int, input_data: Any, transform_id: str) -> Optional[bool]:
         """Execute transform and push output data to warehouse
         """
-        if transform_id in self.transforms:
-            output = await self.transforms[transform_id].execute(height, input_data)
-            if not output:
-                return 0
+        output = await self.transforms[transform_id].execute(height, input_data)
+        if not output:
+            return 0
+
+        if transform_id == 'stake_history':
             r = await rpc_client.call_async(
                 self.warehouse_endpoint,
                 call_id='api_call',
@@ -38,3 +39,15 @@ class Kernel(BaseKernel):
                 },
             )
             return r['status'] and r2['status']
+        elif transform_id == 'stake_top100':
+            r = await rpc_client.call_async(
+                self.warehouse_endpoint,
+                call_id='api_call',
+                api_id='set_latest_stake_top100',
+                api_params={
+                    'stake_top100': output['misc']['latest_stake_top100'],
+                    'transform_id': transform_id,
+                },
+            )
+            return r['status']
+

@@ -63,3 +63,7 @@ class ApiBundle(BaseApiBundle):
     async def latest_unstake_state(self, api_params: dict) -> Optional[int]:
         if 'transform_id' in api_params:
             return await self.collator.latest_unstake_state(api_params['transform_id'])
+
+    async def latest_stake_top100(self, api_params: dict) -> Optional[dict]:
+        if 'transform_id' in api_params:
+            return await self.collator.latest_stake_top100(api_params['transform_id'])

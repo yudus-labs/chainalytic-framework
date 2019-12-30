@@ -66,8 +66,8 @@ class DataFeeder(BaseDataFeeder):
             except:
                 return None
 
-    async def get_block(self, height: int, verbose: bool = 0) -> Optional[dict]:
-        """Retrieve standard block data from chain
+    async def _get_block_stake_tx(self, height: int, verbose: bool = 0) -> Optional[dict]:
+        """Retrieve standard block data from chain for `stake_history`
         """
         if verbose:
             print(f'Feeding block: {height}')
@@ -116,6 +116,12 @@ class DataFeeder(BaseDataFeeder):
             'timestamp': timestamp,
             'total_supply': self._get_total_supply(),
         }
+
+    async def get_block(self, height: int, transform_id: str, verbose: bool = 0) -> Optional[dict]:
+        if transform_id == 'stake_history':
+            return await self._get_block_stake_tx(height, verbose)
+        if transform_id == 'stake_top100':
+            return await self._get_block_stake_tx(height, verbose)
 
     async def last_block_height(self) -> Optional[int]:
         """Get last block height from chain

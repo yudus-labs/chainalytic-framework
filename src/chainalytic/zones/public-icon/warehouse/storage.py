@@ -71,6 +71,8 @@ from chainalytic.warehouse.storage import BaseStorage
 
 class Storage(BaseStorage):
     LATEST_UNSTAKE_STATE_KEY = b'latest_unstake_state'
+    LATEST_STAKE_TOP100_KEY = b'latest_stake_top100'
+    LATEST_STAKE_TOP100_HEIGHT_KEY = b'latest_stake_top100_height'
 
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
@@ -151,8 +153,10 @@ class Storage(BaseStorage):
 
         return 1
 
+    ####################################
+    # For `stake_history` transform only
+    #
     async def set_latest_unstake_state(self, api_params: dict) -> bool:
-
         unstake_state: dict = api_params['unstake_state']
         transform_id: str = api_params['transform_id']
 
@@ -169,3 +173,32 @@ class Storage(BaseStorage):
         value = value.decode() if value else value
 
         return value
+
+    ###################################
+    # For `stake_top100` transform only
+    #
+    async def set_latest_stake_top100(self, api_params: dict) -> bool:
+        stake_top100: dict = api_params['stake_top100']
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+        if stake_top100['wallets'] is not None:
+            db.put(Storage.LATEST_STAKE_TOP100_KEY, json.dumps(stake_top100['wallets']).encode())
+        db.put(
+            Storage.LATEST_STAKE_TOP100_HEIGHT_KEY, str(stake_top100['height']).encode(),
+        )
+        db.put(Storage.LAST_BLOCK_HEIGHT_KEY, str(stake_top100['height']).encode())
+
+        return 1
+
+    async def latest_stake_top100(self, api_params: dict) -> dict:
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+        wallets = db.get(Storage.LATEST_STAKE_TOP100_KEY)
+        wallets = json.loads(wallets.decode()) if wallets else None
+        height = db.get(Storage.LATEST_STAKE_TOP100_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
+
+        return {'wallets': wallets, 'height': height}
+

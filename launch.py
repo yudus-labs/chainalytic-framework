@@ -13,7 +13,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('-i', '--init-config', action='store_true', help='Generate user config')
     parser.add_argument('--restart', action='store_true', help='Force restart all running services')
-    parser.add_argument('-sm', '--skip-monitor', action='store_true', help='Skip monitoring')
+    parser.add_argument('-t', '--transform-id', help='Monitor specific transform. Default is "stake_history"')
     parser.add_argument('-r', '--refresh-time', help='Refresh time of aggregation monitor')
 
     subparsers = parser.add_subparsers(dest='command')
@@ -34,8 +34,11 @@ if __name__ == '__main__':
         else:
             console.load_config()
             console.init_services(service_id=args.sid, force_restart=args.restart)
-            if not args.skip_monitor and not args.sid:
-                console.monitor(float(args.refresh_time) if args.refresh_time else 1)
+            if not args.sid:
+                console.monitor(
+                    args.transform_id if args.transform_id else 'stake_history',
+                    float(args.refresh_time) if args.refresh_time else 1,
+                )
     except KeyboardInterrupt:
         print('Exited Chainalytic Console')
         sys.exit()

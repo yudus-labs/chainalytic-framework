@@ -35,6 +35,7 @@ class Console(object):
 
     Properties:
         working_dir (str):
+        cfg (dict):
         upstream_endpoint (str):
         aggregator_endpoint (str):
         warehouse_endpoint (str):
@@ -193,21 +194,13 @@ class Console(object):
             print('No service initialized')
         print()
 
-    def monitor(self, refresh_time: float = 1.0):
-        assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
-
-        print('Starting aggregation monitor, waiting for Provider service...')
-        ready = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
-        while not ready:
-            time.sleep(0.1)
-            ready = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
-
-        client = HTTPClient(f'http://{self.provider_endpoint}')
-
-        stdscr = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
-
+    def monitor_stake_history(
+        self,
+        transform_id: str,
+        provider_client: HTTPClient,
+        stdscr: '_curses.window',
+        refresh_time: float,
+    ):
         try:
             latest_block_height = 0
             prev_last_block = 0
@@ -229,7 +222,7 @@ class Console(object):
                 warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')[
                     'status'
                 ]
-                provider_connected = client.request("_call", call_id='ping',).data.result
+                provider_connected = provider_client.request("_call", call_id='ping').data.result
 
                 if upstream_connected:
                     upstream_response = rpc_client.call(
@@ -244,11 +237,11 @@ class Console(object):
                     and warehouse_connected
                     and provider_connected
                 ):
-                    r = client.request(
+                    r = provider_client.request(
                         "_call",
                         call_id='api_call',
                         api_id='get_staking_info_last_block',
-                        api_params={'transform_id': 'stake_history'},
+                        api_params={'transform_id': transform_id},
                     ).data.result['result']
                     if r:
                         last_block = r['height']
@@ -280,7 +273,9 @@ class Console(object):
                 c4 = C if provider_connected else D
 
                 stdscr.erase()
-                stdscr.addstr(0, 0, '== Data Aggregation Monitor ==')
+                stdscr.addstr(
+                    0, 0, f'== Data Aggregation Monitor | Transform ID: {transform_id} =='
+                )
                 stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
                 stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
                 stdscr.addstr(3, 0, f'Warehouse service:  {self.warehouse_endpoint} {c3}')
@@ -304,3 +299,133 @@ class Console(object):
             curses.echo()
             curses.nocbreak()
             curses.endwin()
+
+    def monitor_stake_top100(
+        self,
+        transform_id: str,
+        provider_client: HTTPClient,
+        stdscr: '_curses.window',
+        refresh_time: float,
+    ):
+        try:
+            latest_block_height = 0
+            prev_last_block = 0
+            prev_time = time.time()
+
+            last_block = 0
+
+            while 1:
+                upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')[
+                    'status'
+                ]
+                aggregator_connected = rpc_client.call(self.aggregator_endpoint, call_id='ping')[
+                    'status'
+                ]
+                warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')[
+                    'status'
+                ]
+                provider_connected = provider_client.request("_call", call_id='ping').data.result
+
+                if upstream_connected:
+                    upstream_response = rpc_client.call(
+                        self.upstream_endpoint, call_id='last_block_height'
+                    )
+                    if upstream_response['status']:
+                        latest_block_height = upstream_response['data']
+
+                if (
+                    upstream_connected
+                    and aggregator_connected
+                    and warehouse_connected
+                    and provider_connected
+                ):
+                    r = provider_client.request(
+                        "_call",
+                        call_id='api_call',
+                        api_id='last_block_height',
+                        api_params={'transform_id': transform_id},
+                    ).data.result['result']
+                    if r:
+                        last_block = r
+
+                speed = int((last_block - prev_last_block) / (time.time() - prev_time))
+                prev_last_block = last_block
+                prev_time = time.time()
+
+                if latest_block_height > last_block > 0 and speed > 0:
+                    remaining_time = seconds_to_datetime((latest_block_height - last_block) / speed)
+                elif latest_block_height == last_block and last_block > 0:
+                    remaining_time = 'Fully synced'
+                elif latest_block_height < last_block:
+                    remaining_time = (
+                        'Upstream block height is lower than latest aggregated block (out-of-date)'
+                    )
+                else:
+                    remaining_time = 'N/A'
+
+                remaining_blocks = abs(latest_block_height - last_block)
+
+                c1 = C if upstream_connected else D
+                c2 = C if aggregator_connected else D
+                c3 = C if warehouse_connected else D
+                c4 = C if provider_connected else D
+
+                stdscr.erase()
+                stdscr.addstr(
+                    0, 0, f'== Data Aggregation Monitor | Transform ID: {transform_id} =='
+                )
+                stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
+                stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
+                stdscr.addstr(3, 0, f'Warehouse service:  {self.warehouse_endpoint} {c3}')
+                stdscr.addstr(4, 0, f'Provider service:   {self.provider_endpoint} {c4}')
+                stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
+                stdscr.addstr(6, 0, f'----')
+                stdscr.addstr(7, 0, f'Latest upstream block:    {latest_block_height:,}')
+                stdscr.addstr(8, 0, f'Latest aggregated block:  {last_block:,}')
+                stdscr.addstr(9, 0, f'Data aggregation speed:   {speed} blocks/s')
+                stdscr.addstr(10, 0, f'Remaining blocks:         {remaining_blocks:,}')
+                stdscr.addstr(11, 0, f'Estimated time remaining: {remaining_time}')
+                stdscr.refresh()
+
+                time.sleep(refresh_time)
+        finally:
+            curses.echo()
+            curses.nocbreak()
+            curses.endwin()
+
+    def monitor(self, transform_id: str, refresh_time: float = 1.0):
+        assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
+
+        print('Starting aggregation monitor, waiting for Provider and Aggregator service...')
+        r1 = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
+        r2 = rpc_client.call(self.aggregator_endpoint, call_id='ping')['status']
+        while not (r1 and r2):
+            time.sleep(0.1)
+            r1 = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
+            r2 = rpc_client.call(self.aggregator_endpoint, call_id='ping')['status']
+
+        provider_client = HTTPClient(f'http://{self.provider_endpoint}')
+
+        stdscr = curses.initscr()
+        curses.noecho()
+        curses.cbreak()
+
+        r = rpc_client.call(self.aggregator_endpoint, call_id='ls_all_transform_id')
+        if r['status']:
+            all_transforms = r['data']
+        else:
+            curses.echo()
+            curses.nocbreak()
+            curses.endwin()
+            print('Cannot query official transform IDs, exited console')
+            return
+
+        if transform_id == 'stake_history' and transform_id in all_transforms:
+            self.monitor_stake_history(transform_id, provider_client, stdscr, refresh_time)
+        elif transform_id == 'stake_top100' and transform_id in all_transforms:
+            self.monitor_stake_top100(transform_id, provider_client, stdscr, refresh_time)
+        else:
+            curses.echo()
+            curses.nocbreak()
+            curses.endwin()
+            print(f'Transform "{transform_id}" not found, exited console')

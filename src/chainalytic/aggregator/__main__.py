@@ -33,6 +33,8 @@ async def _call(call_id: str, **kwargs):
         return message
     elif call_id == 'exit':
         return EXIT_SERVICE
+    elif call_id == 'ls_all_transform_id':
+        return list(_AGGREGATOR.kernel.transforms)
     else:
         return 'Not implemented'
 
@@ -61,7 +63,7 @@ async def initialize():
                 api_id='set_last_block_height',
                 api_params={'height': _AGGREGATOR.kernel.START_BLOCK_HEIGHT, 'transform_id': tid},
             )
-            print('Set initial last_block_height')
+            print(f'--Set initial last_block_height for transform: {tid}')
     print('Initialized Aggregator service')
     print()
 
@@ -72,11 +74,13 @@ async def fetch_data():
 
     while 1:
         print('New aggregation')
-        t1 = time()
+
+        t = time()
         for tid in _AGGREGATOR.kernel.transforms:
-            print('--Trying to fetch data...')
-            print(f'----For transform: {tid}')
-            print(f'----From Upstream: {upstream_endpoint}')
+            t1 = time()
+            print(f'|Transform ID: {tid}')
+            print(f'|--Trying to fetch data...')
+            print(f'|----From Upstream: {upstream_endpoint}')
 
             warehouse_response = await rpc_client.call_async(
                 warehouse_endpoint,
@@ -84,29 +88,36 @@ async def fetch_data():
                 api_id='last_block_height',
                 api_params={'transform_id': tid},
             )
-            print(f'----Last block height: {warehouse_response["data"]}')
+            print(f'|----Last block height: {warehouse_response["data"]}')
 
             if warehouse_response['status'] and type(warehouse_response['data']) == int:
                 next_block_height = warehouse_response['data'] + 1
                 upstream_response = await rpc_client.call_async(
-                    upstream_endpoint, call_id='get_block', height=next_block_height
+                    upstream_endpoint,
+                    call_id='get_block',
+                    height=next_block_height,
+                    transform_id=tid,
                 )
                 if upstream_response['status'] and upstream_response['data'] is not None:
-                    print('--Fetched data successfully')
-                    print(f'--Next block height: {next_block_height}')
-                    print('--Preparing to execute next block...')
+                    print(f'|--Fetched data successfully')
+                    print(f'|--Next block height: {next_block_height}')
+                    print(f'|--Preparing to execute next block...')
                     await _AGGREGATOR.kernel.execute(
                         height=next_block_height,
                         input_data=upstream_response['data'],
                         transform_id=tid,
                     )
-                    print(f'--Executed block "{next_block_height}" successfully')
+                    print(f'|--Executed block "{next_block_height}" successfully')
                 else:
-                    print('--Failed to fetch, trying again...')
-            print('--')
-        agg_time = round(time() - t1, 4)
-        print(f'Total aggregation time: {agg_time}s')
-        print(f'Estimated aggregation speed: {int(1/agg_time)} blocks/s')
+                    print(f'|--Failed to fetch, trying again...')
+            agg_time = round(time() - t1, 4)
+            print(f'|Aggregation time: {agg_time}s')
+
+        print('|')
+        tagg_time = round(time() - t, 4)
+        print(f'|Total aggregation time: {tagg_time}s')
+        print(f'|Estimated aggregation speed: {int(1/tagg_time)} blocks/s')
+        print('')
         print('')
 
 

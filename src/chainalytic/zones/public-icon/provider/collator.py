@@ -42,6 +42,9 @@ class Collator(BaseCollator):
         else:
             return None
 
+    ####################################
+    # For `stake_history` transform only
+    #
     async def latest_unstake_state(self, transform_id: str) -> Optional[dict]:
         r = await rpc_client.call_async(
             self.warehouse_endpoint,
@@ -49,11 +52,25 @@ class Collator(BaseCollator):
             api_id='latest_unstake_state',
             api_params={'transform_id': transform_id},
         )
-        pprint(r)
         if r['status'] and r['data']:
             try:
                 return json.loads(r['data'])
             except:
                 return None
+        else:
+            return None
+
+    ####################################
+    # For `stake_top100` transform only
+    #
+    async def latest_stake_top100(self, transform_id: str) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='latest_stake_top100',
+            api_params={'transform_id': transform_id},
+        )
+        if r['status']:
+            return r['data']
         else:
             return None

@@ -28,7 +28,7 @@ class BaseDataFeeder(object):
         self.zone = zone_manager.get_zone(working_dir, zone_id)
         self.direct_db_access = self.zone['direct_db_access']
 
-    async def get_block(self, height: int) -> Optional[Collection]:
+    async def get_block(self, height: int, transform_id: str) -> Optional[Collection]:
         """Retrieve standard block data from chain
         """
         block = {}

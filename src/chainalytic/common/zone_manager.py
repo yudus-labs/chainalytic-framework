@@ -32,8 +32,10 @@ def load_zone(zone_id: str) -> Dict[str, Dict]:
             ret[service][mod] = module
             spec.loader.exec_module(module)
 
-    for p in zone_implementation_dir.joinpath('aggregator', 'transform_registry').glob('*.py'):
-        spec = importlib.util.spec_from_file_location(p.name, p.as_posix(),)
+    for p in zone_implementation_dir.joinpath('aggregator', 'transform_registry').glob(
+        '[!^__]*.py'
+    ):
+        spec = importlib.util.spec_from_file_location(p.name, p.as_posix())
         module = importlib.util.module_from_spec(spec)
         ret['aggregator']['transform_registry'][p.stem] = module
         spec.loader.exec_module(module)

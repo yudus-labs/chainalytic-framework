@@ -13,8 +13,7 @@ import time
 import websockets
 from jsonrpcserver import method
 
-from chainalytic.common.rpc_server import (EXIT_SERVICE, main_dispatcher,
-                                           show_call_info)
+from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 
 from . import Upstream
 
@@ -40,7 +39,8 @@ async def _call(call_id: str, **kwargs):
         return EXIT_SERVICE
     elif call_id == 'get_block':
         height = params['height']
-        return await _UPSTREAM.data_feeder.get_block(height)
+        transform_id = params['transform_id']
+        return await _UPSTREAM.data_feeder.get_block(height, transform_id)
     elif call_id == 'last_block_height':
         return await _UPSTREAM.data_feeder.last_block_height()
     else:
