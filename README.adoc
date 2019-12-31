@@ -15,7 +15,7 @@ potential valuable insights. +
 and generate new data using your own rule
 in a modular style.*
 
-*Note*: it is *not* the tool that simply extracts chain data and dumps to big-data dataset (e.g. BigQuery)
+*Note*: it is *not* the tool that simply extracts block/txs data and dumps to big-data dataset (e.g. BigQuery)
 
 It targets developers who are interested in building application for
 
@@ -64,6 +64,7 @@ Install dependencies
 sudo apt update
 sudo apt install libsecp256k1-dev libleveldb-dev pkg-config build-essential
 
+python37 -m venv venv
 venv/bin/pip install -e .
 ----
 
@@ -86,9 +87,10 @@ In `chain_registry.yml`, for ICON public chain, modify it like below
 zones:
   - zone_id: 'public-icon'
     zone_name: 'Public ICON mainnet'
-    client_endpoint: 'https://ctz.solidwallet.io'
+    client_endpoint: 'localhost:9000' # Your citizen node endpoint
     chain_db_dir: 'path_to/data/mainnet/.storage/db_<YOUR_IP>:7100_icon_dex'
     score_db_icondex_dir: 'path_to/data/mainnet/.score_data/db/icon_dex'
+    direct_db_access: 0 # Set to 1 for fast aggregation
 ----
 
 *Run all services and monitor them*
@@ -117,7 +119,25 @@ venv/bin/python -m chainalytic.provider --endpoint localhost:5530 --zone_id publ
 
 ### 3. Producer service JSON-RPC APIs
 
-#### `public-icon` zone
+*Producer default endpoint*: `http://localhost:5530`
+
+*HTTP POST request format for all APIs*
+
+[source]
+----
+{
+    "method": "_call",
+    "params": {
+        "call_id": "api_call",
+        "api_id": <API_ID: str>,
+        "api_params": <API_PARAMS: dict>
+    },
+    "id": <JSONPRC_ID: int>,
+  	"jsonrpc": "2.0"
+}
+----
+
+*Example*
 
 last_block_height
 [source]
@@ -134,47 +154,48 @@ last_block_height
 }
 ----
 
+*For convenience, API references contain only `api_id` and `api_params`*
+
+### 4. API Reference
+
+#### Zone `public-icon`
+
+last_block_height
+[source]
+----
+"api_id": "last_block_height"
+
+"api_params": {"transform_id": "stake_history"}
+----
+
 get_staking_info_last_block
 [source]
 ----
-{
-    "method": "_call",
-    "params": {
-        "call_id": "api_call",
-        "api_id": "get_staking_info_last_block",
-        "api_params": {}
-    },
-    "id": 123,
-  	"jsonrpc": "2.0"
-}
+"api_id": "get_staking_info_last_block"
+
+"api_params": {}
 ----
 
 get_staking_info
 [source]
 ----
-{
-    "method": "_call",
-    "params": {
-        "call_id": "api_call",
-        "api_id": "get_staking_info",
-        "api_params": {"height": 9999999}
-    },
-    "id": 123,
-  	"jsonrpc": "2.0"
-}
+"api_id": "get_staking_info"
+
+"api_params": {"height": <BLOCK_HEIGHT: int>}
 ----
 
 latest_unstake_state
 [source]
 ----
-{
-    "method": "_call",
-    "params": {
-        "call_id": "api_call",
-        "api_id": "latest_unstake_state",
-        "api_params": {"transform_id": "stake_history"}
-    },
-    "id": 123,
-  	"jsonrpc": "2.0"
-}
+"api_id": "latest_unstake_state"
+
+"api_params": {"transform_id": "stake_history"}
+----
+
+latest_stake_top100
+[source]
+----
+"api_id": "latest_stake_top100"
+
+"api_params": {"transform_id": "stake_top100"}
 ----

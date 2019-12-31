@@ -27,6 +27,13 @@ rpc_client.call_aiohttp(
     api_id='latest_unstake_state',
     api_params={'transform_id': 'stake_history'}
 )
+rpc_client.call_aiohttp(
+    'localhost:5530',
+    call_id='api_call',
+    api_id='latest_stake_top100',
+    api_params={'transform_id': 'stake_top100'}
+)
+
 
 """
 
