@@ -1,5 +1,6 @@
 import argparse
 import sys
+import time
 
 from chainalytic.hub import Console
 
@@ -13,6 +14,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('-i', '--init-config', action='store_true', help='Generate user config')
     parser.add_argument('--restart', action='store_true', help='Force restart all running services')
+    parser.add_argument('--keep-running', action='store_true', help='Prevent console from exiting')
 
     subparsers = parser.add_subparsers(dest='command', help='Sub commands')
     stop_parser = subparsers.add_parser('stop', help='Kill running Chainalytic services')
@@ -43,8 +45,9 @@ if __name__ == '__main__':
         else:
             console.load_config()
             console.init_services(service_id=args.sid, force_restart=args.restart)
+            if args.keep_running:
+                while 1:
+                    time.sleep(999)
     except KeyboardInterrupt:
         print('Exited Chainalytic Console')
         sys.exit()
-
-    input('Press Enter to exit...')

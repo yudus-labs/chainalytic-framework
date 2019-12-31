@@ -1,0 +1,13 @@
+version: '3'
+services:
+  chainalytic:
+    build: .
+    image: duyyudus/chainalytic
+    container_name: chainalytic
+    network_mode: host 
+    volumes:
+        - /run/media/duyyudus/Samsung_T5/citizen-node/data/mainnet:/mainnet
+        - .chainalytic/cfg:/chainalytic/.chainalytic/cfg
+        - .chainalytic/chainalytic_warehouse:/chainalytic/.chainalytic/chainalytic_warehouse
+    ports:
+        - 5530:5530
