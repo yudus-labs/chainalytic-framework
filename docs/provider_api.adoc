@@ -13,14 +13,14 @@ Producer default endpoint: `http://localhost:5530`
         "api_id": <API_ID: str>,
         "api_params": <API_PARAMS: dict>
     },
-    "id": <JSONPRC_ID: int>,
+    "id": <REQUEST_ID: int>,
   	"jsonrpc": "2.0"
 }
 ----
 
 *Example*
 
-last_block_height
+Call `last_block_height` of transform `stake_history`
 [source]
 ----
 {
@@ -40,6 +40,13 @@ last_block_height
 _For convenience, API reference contains only_ `api_id` _and_ `api_params`
 
 ### Zone `public-icon`
+
+List of `TRANSFORM_ID`:
+[source]
+----
+stake_history
+stake_top100
+----
 
 last_block_height
 [source]
