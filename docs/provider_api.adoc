@@ -1,0 +1,82 @@
+## Producer service JSON-RPC APIs
+
+Producer default endpoint: `http://localhost:5530`
+
+*HTTP POST request format for all APIs*
+
+[source]
+----
+{
+    "method": "_call",
+    "params": {
+        "call_id": "api_call",
+        "api_id": <API_ID: str>,
+        "api_params": <API_PARAMS: dict>
+    },
+    "id": <JSONPRC_ID: int>,
+  	"jsonrpc": "2.0"
+}
+----
+
+*Example*
+
+last_block_height
+[source]
+----
+{
+    "method": "_call",
+    "params": {
+        "call_id": "api_call",
+        "api_id": "last_block_height",
+        "api_params": {"transform_id": "stake_history"}
+    },
+    "id": 123,
+  	"jsonrpc": "2.0"
+}
+----
+
+## API Reference
+
+_For convenience, API references contain only_ `api_id` _and_ `api_params`
+
+### Zone `public-icon`
+
+last_block_height
+[source]
+----
+"api_id": "last_block_height"
+
+"api_params": {"transform_id": "stake_history"}
+----
+
+get_staking_info_last_block
+[source]
+----
+"api_id": "get_staking_info_last_block"
+
+"api_params": {}
+----
+
+get_staking_info
+[source]
+----
+"api_id": "get_staking_info"
+
+"api_params": {"height": <BLOCK_HEIGHT: int>}
+----
+
+latest_unstake_state
+[source]
+----
+"api_id": "latest_unstake_state"
+
+"api_params": {"transform_id": "stake_history"}
+----
+
+latest_stake_top100
+[source]
+----
+"api_id": "latest_stake_top100"
+
+"api_params": {"transform_id": "stake_top100"}
+----

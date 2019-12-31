@@ -1,5 +1,7 @@
 # Chainalytic Framework
 
+link:docs/provider_api.adoc[Jump to Provider service API reference]
+
 ## The Purpose
 
 There is a huge amount of data deep
@@ -17,7 +19,7 @@ in a modular style.*
 
 *Note*: it is *not* the tool that simply extracts block/txs data and dumps to big-data dataset (e.g. BigQuery)
 
-It targets developers who are interested in building application for
+It targets developers/analysts who are interested in building application or research on
 
 - Blockchain analytic and insights
 - Monitoring tools
@@ -70,7 +72,7 @@ venv/bin/pip install -e .
 
 ### 1. Chainalytic Console
 
-*You must setup user config first, run below command to generate it*
+#### 1A. You must setup user config first, run below command to generate it
 
 `venv/bin/python launch.py --init-config`
 
@@ -93,9 +95,23 @@ zones:
     direct_db_access: 0 # Set to 1 for fast aggregation
 ----
 
-*Run all services and monitor them*
+#### 1B. Basic usages
+
+*Run all services*
 
 `venv/bin/python launch.py`
+
+*Monitor one specific data transform*
+
+`venv/bin/python launch.py m <TRANSFORM_ID>`
+
+Default `TRANSFORM_ID` is `stake_history`
+
+List of transform IDs:
+----
+stake_history
+stake_top100
+----
 
 *Terminate all services*
 
@@ -115,87 +131,4 @@ venv/bin/python -m chainalytic.upstream --endpoint localhost:5500 --zone_id publ
 venv/bin/python -m chainalytic.aggregator --endpoint localhost:5510 --zone_id public-icon --working_dir .
 venv/bin/python -m chainalytic.warehouse --endpoint localhost:5520 --zone_id public-icon --working_dir .
 venv/bin/python -m chainalytic.provider --endpoint localhost:5530 --zone_id public-icon --working_dir .
-----
-
-### 3. Producer service JSON-RPC APIs
-
-*Producer default endpoint*: `http://localhost:5530`
-
-*HTTP POST request format for all APIs*
-
-[source]
-----
-{
-    "method": "_call",
-    "params": {
-        "call_id": "api_call",
-        "api_id": <API_ID: str>,
-        "api_params": <API_PARAMS: dict>
-    },
-    "id": <JSONPRC_ID: int>,
-  	"jsonrpc": "2.0"
-}
-----
-
-*Example*
-
-last_block_height
-[source]
-----
-{
-    "method": "_call",
-    "params": {
-        "call_id": "api_call",
-        "api_id": "last_block_height",
-        "api_params": {"transform_id": "stake_history"}
-    },
-    "id": 123,
-  	"jsonrpc": "2.0"
-}
-----
-
-*For convenience, API references contain only `api_id` and `api_params`*
-
-### 4. API Reference
-
-#### Zone `public-icon`
-
-last_block_height
-[source]
-----
-"api_id": "last_block_height"
-
-"api_params": {"transform_id": "stake_history"}
-----
-
-get_staking_info_last_block
-[source]
-----
-"api_id": "get_staking_info_last_block"
-
-"api_params": {}
-----
-
-get_staking_info
-[source]
-----
-"api_id": "get_staking_info"
-
-"api_params": {"height": <BLOCK_HEIGHT: int>}
-----
-
-latest_unstake_state
-[source]
-----
-"api_id": "latest_unstake_state"
-
-"api_params": {"transform_id": "stake_history"}
-----
-
-latest_stake_top100
-[source]
-----
-"api_id": "latest_stake_top100"
-
-"api_params": {"transform_id": "stake_top100"}
 ----
