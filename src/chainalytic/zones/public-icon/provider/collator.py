@@ -52,11 +52,8 @@ class Collator(BaseCollator):
             api_id='latest_unstake_state',
             api_params={'transform_id': transform_id},
         )
-        if r['status'] and r['data']:
-            try:
-                return json.loads(r['data'])
-            except:
-                return None
+        if r['status']:
+            return r['data']
         else:
             return None
 

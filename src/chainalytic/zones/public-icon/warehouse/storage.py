@@ -56,6 +56,23 @@ rpc_client.call_async(
         transform_id: str,
     }
 )
+rpc_client.call_async(
+    'localhost:5520',
+    call_id='api_call',
+    api_id='set_latest_stake_top100',
+    api_params={
+        unstake_state: dict,
+        transform_id: str,
+    }
+)
+rpc_client.call_async(
+    'localhost:5520',
+    call_id='api_call',
+    api_id='latest_stake_top100',
+    api_params={
+        transform_id: str,
+    }
+)
 
 """
 
@@ -71,6 +88,7 @@ from chainalytic.warehouse.storage import BaseStorage
 
 class Storage(BaseStorage):
     LATEST_UNSTAKE_STATE_KEY = b'latest_unstake_state'
+    LATEST_UNSTAKE_STATE_HEIGHT_KEY = b'latest_unstake_state_height'
     LATEST_STAKE_TOP100_KEY = b'latest_stake_top100'
     LATEST_STAKE_TOP100_HEIGHT_KEY = b'latest_stake_top100_height'
 
@@ -161,18 +179,24 @@ class Storage(BaseStorage):
         transform_id: str = api_params['transform_id']
 
         db = self.transform_storage_dbs[transform_id]
-        db.put(Storage.LATEST_UNSTAKE_STATE_KEY, value=json.dumps(unstake_state).encode())
+        if unstake_state['wallets'] is not None:
+            db.put(Storage.LATEST_UNSTAKE_STATE_KEY, json.dumps(unstake_state['wallets']).encode())
+        db.put(
+            Storage.LATEST_UNSTAKE_STATE_HEIGHT_KEY, str(unstake_state['height']).encode(),
+        )
 
         return 1
 
-    async def latest_unstake_state(self, api_params: dict) -> Optional[str]:
+    async def latest_unstake_state(self, api_params: dict) -> dict:
         transform_id: str = api_params['transform_id']
 
         db = self.transform_storage_dbs[transform_id]
-        value = db.get(Storage.LATEST_UNSTAKE_STATE_KEY)
-        value = value.decode() if value else value
+        wallets = db.get(Storage.LATEST_UNSTAKE_STATE_KEY)
+        wallets = json.loads(wallets.decode()) if wallets else None
+        height = db.get(Storage.LATEST_UNSTAKE_STATE_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
 
-        return value
+        return {'wallets': wallets, 'height': height}
 
     ###################################
     # For `stake_top100` transform only

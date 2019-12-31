@@ -19,21 +19,20 @@ rpc_client.call_aiohttp(
     'localhost:5530',
     call_id='api_call',
     api_id='get_staking_info_last_block',
-    api_params={'transform_id': 'stake_history'}
+    api_params={}
 )
 rpc_client.call_aiohttp(
     'localhost:5530',
     call_id='api_call',
     api_id='latest_unstake_state',
-    api_params={'transform_id': 'stake_history'}
+    api_params={}
 )
 rpc_client.call_aiohttp(
     'localhost:5530',
     call_id='api_call',
     api_id='latest_stake_top100',
-    api_params={'transform_id': 'stake_top100'}
+    api_params={}
 )
-
 
 """
 
@@ -68,9 +67,7 @@ class ApiBundle(BaseApiBundle):
                 return r
 
     async def latest_unstake_state(self, api_params: dict) -> Optional[int]:
-        if 'transform_id' in api_params:
-            return await self.collator.latest_unstake_state(api_params['transform_id'])
+        return await self.collator.latest_unstake_state('stake_history')
 
     async def latest_stake_top100(self, api_params: dict) -> Optional[dict]:
-        if 'transform_id' in api_params:
-            return await self.collator.latest_stake_top100(api_params['transform_id'])
+        return await self.collator.latest_stake_top100('stake_top100')

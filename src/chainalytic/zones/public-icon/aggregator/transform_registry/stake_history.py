@@ -76,6 +76,8 @@ class Transform(BaseTransform):
         total_staking_wallets = prev_total_staking_wallets
         total_unstaking_wallets = prev_total_unstaking_wallets
 
+        unstake_state_changed = 0
+
         # Cleanup expired unlock period
         #
         unstaking_addresses = cache_db.get(b'unstaking')
@@ -83,11 +85,13 @@ class Transform(BaseTransform):
             unstaking_addresses = json.loads(unstaking_addresses)
         else:
             unstaking_addresses = {}
+            unstake_state_changed = 1
         for addr in list(unstaking_addresses):
             stake_value, unstaking_value, unlock_height = unstaking_addresses[addr].split(':')
             if int(unlock_height) <= height:
                 unstaking_addresses.pop(addr)
                 cache_db_batch.put(addr.encode(), f'{stake_value}:0:0'.encode())
+                unstake_state_changed = 1
 
         cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
 
@@ -151,8 +155,11 @@ class Transform(BaseTransform):
                 unstaking_addresses[
                     addr
                 ] = f'{cur_stake_value}:{cur_unstaking_value}:{unlock_height}'
+                unstake_state_changed = 1
             elif addr in unstaking_addresses:
                 unstaking_addresses.pop(addr)
+                unstake_state_changed = 1
+
             cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
 
             # Update total staking
@@ -192,5 +199,10 @@ class Transform(BaseTransform):
         return {
             'height': height,
             'data': data,
-            'misc': {'latest_unstake_state': {'wallets': unstaking_addresses, 'height': height}},
+            'misc': {
+                'latest_unstake_state': {
+                    'wallets': unstaking_addresses if unstake_state_changed else None,
+                    'height': height,
+                }
+            },
         }

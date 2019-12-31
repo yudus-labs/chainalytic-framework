@@ -37,7 +37,7 @@ last_block_height
 
 ## API Reference
 
-_For convenience, API references contain only_ `api_id` _and_ `api_params`
+_For convenience, API reference contains only_ `api_id` _and_ `api_params`
 
 ### Zone `public-icon`
 
@@ -46,7 +46,7 @@ last_block_height
 ----
 "api_id": "last_block_height"
 
-"api_params": {"transform_id": "stake_history"}
+"api_params": {"transform_id": <TRANSFORM_ID: str>}
 ----
 
 get_staking_info_last_block
@@ -70,7 +70,7 @@ latest_unstake_state
 ----
 "api_id": "latest_unstake_state"
 
-"api_params": {"transform_id": "stake_history"}
+"api_params": {}
 ----
 
 latest_stake_top100
@@ -78,5 +78,5 @@ latest_stake_top100
 ----
 "api_id": "latest_stake_top100"
 
-"api_params": {"transform_id": "stake_top100"}
+"api_params": {}
 ----
