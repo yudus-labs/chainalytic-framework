@@ -46,3 +46,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('Exited Chainalytic Console')
         sys.exit()
+
+    input('Press Enter to exit...')
