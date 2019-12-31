@@ -1,5 +1,7 @@
 # Chainalytic Framework
 
+Modular framework for blockchain time-series data aggregation and arbitrary chain-state rebuild, which generate more insights of generic blockchains.
+
 link:docs/provider_api.adoc[Jump to Provider service API reference]
 
 ## The Purpose
@@ -12,6 +14,7 @@ potential valuable insights. +
 
 - _Rebuild *implicit* historical blockchain data from transactions ( transition functions )_
 - _Realtime time-series data aggregation_
+- _Customized chain-state rebuild_
 
 *It helps to easily extract, transform, aggregate
 and generate new data using your own rule
