@@ -142,7 +142,9 @@ class Console(object):
 
         print('Stopped all Chainalytic services' if cleaned else 'Nothing to stop')
 
-    def init_services(self, service_id: Optional[str] = None, force_restart: Optional[bool] = 0):
+    def init_services(
+        self, zone_id: str, service_id: Optional[str] = None, force_restart: Optional[bool] = 0
+    ):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
         if force_restart:
@@ -176,7 +178,7 @@ class Console(object):
                     '--endpoint',
                     self.sid[i]['endpoint'],
                     '--zone_id',
-                    'public-icon',
+                    zone_id,
                     '--working_dir',
                     os.getcwd(),
                 ]
@@ -196,6 +198,7 @@ class Console(object):
 
     def monitor_stake_history(
         self,
+        zone_id: str,
         transform_id: str,
         provider_client: HTTPClient,
         stdscr: '_curses.window',
@@ -274,7 +277,9 @@ class Console(object):
 
                 stdscr.erase()
                 stdscr.addstr(
-                    0, 0, f'== Data Aggregation Monitor | Transform ID: {transform_id} =='
+                    0,
+                    0,
+                    f'== Data Aggregation Monitor | Zone ID: {zone_id} | Transform ID: {transform_id} ==',
                 )
                 stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
                 stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
@@ -302,6 +307,7 @@ class Console(object):
 
     def monitor_stake_top100(
         self,
+        zone_id: str,
         transform_id: str,
         provider_client: HTTPClient,
         stdscr: '_curses.window',
@@ -372,7 +378,9 @@ class Console(object):
 
                 stdscr.erase()
                 stdscr.addstr(
-                    0, 0, f'== Data Aggregation Monitor | Transform ID: {transform_id} =='
+                    0,
+                    0,
+                    f'== Data Aggregation Monitor | Zone ID: {zone_id} | Transform ID: {transform_id} ==',
                 )
                 stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
                 stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
@@ -405,6 +413,7 @@ class Console(object):
             r2 = rpc_client.call(self.aggregator_endpoint, call_id='ping')['status']
 
         provider_client = HTTPClient(f'http://{self.provider_endpoint}')
+        zone_id = rpc_client.call_aiohttp(self.provider_endpoint, call_id='get_zone_id')['data']
 
         stdscr = curses.initscr()
         curses.noecho()
@@ -421,9 +430,9 @@ class Console(object):
             return
 
         if transform_id == 'stake_history' and transform_id in all_transforms:
-            self.monitor_stake_history(transform_id, provider_client, stdscr, refresh_time)
+            self.monitor_stake_history(zone_id, transform_id, provider_client, stdscr, refresh_time)
         elif transform_id == 'stake_top100' and transform_id in all_transforms:
-            self.monitor_stake_top100(transform_id, provider_client, stdscr, refresh_time)
+            self.monitor_stake_top100(zone_id, transform_id, provider_client, stdscr, refresh_time)
         else:
             curses.echo()
             curses.nocbreak()

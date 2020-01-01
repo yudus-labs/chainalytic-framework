@@ -31,6 +31,8 @@ async def _call(call_id: str, **kwargs):
             ]
         )
         return message
+    elif call_id == 'get_zone_id':
+        return _AGGREGATOR.zone_id
     elif call_id == 'exit':
         return EXIT_SERVICE
     elif call_id == 'ls_all_transform_id':

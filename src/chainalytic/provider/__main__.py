@@ -31,6 +31,8 @@ async def _call(call_id: str, **kwargs):
             ]
         )
         return message
+    elif call_id == 'get_zone_id':
+        return _PROVIDER.zone_id
     elif call_id == 'exit':
         print('Service is terminated')
         sys.exit()

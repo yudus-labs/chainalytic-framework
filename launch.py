@@ -8,6 +8,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
+        '-z', '--zone-id', default='public-icon', help='Zone ID to init. Default is "public-icon"',
+    )
+    parser.add_argument(
         '-s',
         '--sid',
         help='Service ID to init. 0: Upstream, 1: Aggregator, 2: Warehouse, 3: Provider',
@@ -23,7 +26,7 @@ if __name__ == '__main__':
     )
     monitor_parser = subparsers.add_parser('m', help='Monitor one specific transform')
     monitor_parser.add_argument(
-        'transform_id', nargs='?', default=None, help='Transform ID',
+        'transform_id', nargs='?', default='stake_history', help='Transform ID. Default is "stake_history"',
     )
     monitor_parser.add_argument('-r', '--refresh-time', help='Refresh time of aggregation monitor')
 
@@ -37,14 +40,15 @@ if __name__ == '__main__':
         elif args.command == 'm':
             console.load_config()
             console.monitor(
-                args.transform_id if args.transform_id else 'stake_history',
-                float(args.refresh_time) if args.refresh_time else 1,
+                args.transform_id, float(args.refresh_time) if args.refresh_time else 1,
             )
         elif args.init_config:
             console.init_config()
         else:
             console.load_config()
-            console.init_services(service_id=args.sid, force_restart=args.restart)
+            console.init_services(
+                args.zone_id, service_id=args.sid, force_restart=args.restart,
+            )
             if args.keep_running:
                 while 1:
                     time.sleep(999)
