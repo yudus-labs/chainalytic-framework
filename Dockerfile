@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 ENV PATH /opt/conda/bin:$PATH
 
 RUN apt update --fix-missing && \
-    apt install -y wget bzip2 ca-certificates curl git && \
+    apt install -y wget bzip2 ca-certificates && \
     apt install -y libsecp256k1-dev libleveldb-dev pkg-config build-essential && \
     apt clean
 
