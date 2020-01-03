@@ -17,3 +17,72 @@ Testing config is defined in `tox.ini` and `MANIFEST.ini`
 This project uses `tox` and `pytest` for automated test. +
 To run all tests, in current virtual env, run +
 `tox`
+
+#### Docker deploy setup for testing and building new data transform modules
+
+*Assume you are currently in a directory like below*
+
+[source]
+----
+..
+|__cfg_dev
+|__|__chain_registry.yml
+|__|__setting.yml
+|__chainalytic_warehouse_dev/
+|__docker-compose.yml
+|__.score_data_mirror
+|__.storage_mirror
+
+----
+
+##### docker-compose.yml
+[source]
+----
+version: '3'
+services:
+  chainalytic_dev:
+    image: duyyudus/chainalytic:dev
+    container_name: chainalytic_dev
+    restart: "always"
+    network_mode: host
+    volumes:
+        - .storage_mirror:/mainnet/.storage
+        - .score_data_mirror:/mainnet/.score_data
+        - ./cfg_dev:/chainalytic/.chainalytic/cfg
+        - ./chainalytic_warehouse_dev:/chainalytic/.chainalytic/chainalytic_warehouse
+    ports:
+        - 5531:5531
+    command: --zone-id public-icon
+
+----
+
+##### cfg_dev/chain_registry.yml
+[source]
+----
+zones:
+  - zone_id: 'public-icon'
+    zone_name: 'Public ICON mainnet'
+    client_endpoint: 'localhost:9000'
+    chain_db_dir: '/mainnet/.storage/db_<HOST_IP>:7100_icon_dex'
+    score_db_icondex_dir: '/mainnet/.score_data/db/icon_dex'
+    direct_db_access: 1
+----
+
+##### cfg_dev/setting.yml
+[source]
+----
+upstream_endpoint: '0.0.0.0:5501'
+aggregator_endpoint: '0.0.0.0:5511'
+warehouse_endpoint: '0.0.0.0:5521'
+provider_endpoint: '0.0.0.0:5531'
+
+warehouse_dir: '.chainalytic/chainalytic_warehouse'
+
+# E.g. ".chainalytic/chainalytic_warehouse/public-icon_storage"
+zone_storage_dir: '{warehouse_dir}/{zone_id}_storage'
+
+# E.g. ".chainalytic/chainalytic_warehouse/public-icon_storage/unstaking_storage"
+transform_storage_dir: '{zone_storage_dir}/{transform_id}_storage'
+
+transform_cache_dir: '{zone_storage_dir}/{transform_id}_cache'
+----
