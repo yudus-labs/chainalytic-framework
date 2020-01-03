@@ -1,10 +1,10 @@
 version: '3'
 services:
-  chainalytic:
+  chainalytic_dev:
     build: .
-    image: duyyudus/chainalytic
-    container_name: chainalytic
-    network_mode: host 
+    image: duyyudus/chainalytic:dev
+    container_name: chainalytic_dev
+    network_mode: host
     volumes:
       - /run/media/duyyudus/Samsung_T5/citizen-node/data/mainnet:/mainnet
       - .chainalytic/cfg:/chainalytic/.chainalytic/cfg
