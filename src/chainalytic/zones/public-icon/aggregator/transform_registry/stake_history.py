@@ -87,10 +87,10 @@ class Transform(BaseTransform):
             unstaking_addresses = {}
             unstake_state_changed = 1
         for addr in list(unstaking_addresses):
-            stake_value, unstaking_value, unlock_height = unstaking_addresses[addr].split(':')
+            stake_value, unstaking_value, request_height, unlock_height = unstaking_addresses[addr].split(':')
             if int(unlock_height) <= height:
                 unstaking_addresses.pop(addr)
-                cache_db_batch.put(addr.encode(), f'{stake_value}:0:0'.encode())
+                cache_db_batch.put(addr.encode(), f'{stake_value}:0:0:0'.encode())
                 unstake_state_changed = 1
 
         cache_db_batch.put(b'unstaking', json.dumps(unstaking_addresses).encode())
@@ -154,7 +154,7 @@ class Transform(BaseTransform):
             if cur_unstaking_value > 0:
                 unstaking_addresses[
                     addr
-                ] = f'{cur_stake_value}:{cur_unstaking_value}:{unlock_height}'
+                ] = f'{cur_stake_value}:{cur_unstaking_value}:{height}:{unlock_height}'
                 unstake_state_changed = 1
             elif addr in unstaking_addresses:
                 unstaking_addresses.pop(addr)
@@ -171,7 +171,7 @@ class Transform(BaseTransform):
         # Calculate latest total unstaking
         total_unstaking = 0
         for addr in unstaking_addresses:
-            stake_value, unstaking_value, unlock_height = unstaking_addresses[addr].split(':')
+            stake_value, unstaking_value, request_height, unlock_height = unstaking_addresses[addr].split(':')
             total_unstaking += float(unstaking_value)
 
         cache_db_batch.put(Transform.LAST_STATE_HEIGHT_KEY, str(height).encode())
