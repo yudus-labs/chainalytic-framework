@@ -108,4 +108,4 @@ venv.bak/
 _tmp/
 .chainalytic*/
 
-_*.py
+___*.py
