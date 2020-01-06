@@ -1,3 +1,4 @@
+import functools
 import json
 import traceback
 from pathlib import Path
@@ -21,6 +22,22 @@ V3_BLOCK_HEIGHT = 10324749
 V4_BLOCK_HEIGHT = 12640761
 
 
+def handle_client_failure(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            if args[0].icon_service is None:
+                args[0].icon_service = IconService(
+                    HTTPProvider(f"http://{args[0].client_endpoint}", 3)
+                )
+            return func(*args, **kwargs)
+        except Exception:
+            args[0].icon_service = None
+            return None
+
+    return wrapper
+
+
 class DataFeeder(BaseDataFeeder):
     LAST_BLOCK_KEY = b'last_block_key'
 
@@ -36,9 +53,9 @@ class DataFeeder(BaseDataFeeder):
             self.chain_db = plyvel.DB(self.chain_db_dir)
             self.score_db_icondex_db = plyvel.DB(self.score_db_icondex_dir)
         else:
-            self.icon_service = IconService(HTTPProvider(f"http://{self.client_endpoint}", 3))
-            self.icon_service.get_total_supply()
+            self.icon_service = None
 
+    @handle_client_failure
     def _get_total_supply(self):
         if self.direct_db_access:
             r = self.score_db_icondex_db.get(b'total_supply')
@@ -46,6 +63,7 @@ class DataFeeder(BaseDataFeeder):
         else:
             return self.icon_service.get_total_supply() / 10 ** 18
 
+    @handle_client_failure
     def _get_block(self, height: int) -> Optional[Dict]:
         if self.direct_db_access:
             heightkey = BLOCK_HEIGHT_KEY + height.to_bytes(BLOCK_HEIGHT_BYTES_LEN, byteorder='big')
@@ -65,6 +83,10 @@ class DataFeeder(BaseDataFeeder):
                 return self.icon_service.get_block(height)
             except:
                 return None
+
+    @handle_client_failure
+    def _get_last_block(self):
+        return self.icon_service.get_block('latest')['height']
 
     async def _get_block_stake_tx(self, height: int, verbose: bool = 0) -> Optional[dict]:
         """Retrieve standard block data from chain for `stake_history`
@@ -136,4 +158,4 @@ class DataFeeder(BaseDataFeeder):
                 block = json.loads(data)
                 return int(block['height'], 16)
         else:
-            return self.icon_service.get_block('latest')['height']
+            return self._get_last_block()
