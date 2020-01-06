@@ -13,6 +13,8 @@ from chainalytic.common import rpc_client, trie
 
 class Transform(BaseTransform):
     LAST_STATE_HEIGHT_KEY = b'last_state_height'
+    TIMESPAN = 129600  # 3 days
+    MAX_WALLETS = 200
 
     def __init__(self, working_dir: str, zone_id: str, transform_id: str):
         super(Transform, self).__init__(working_dir, zone_id, transform_id)
@@ -40,17 +42,39 @@ class Transform(BaseTransform):
         # #################################################
 
         set_stake_wallets = input_data['data']
+        state_changed = 1 if set_stake_wallets else 0
 
-        if set_stake_wallets:
-            recent_stake_wallets = cache_db.get(b'recent_stake_wallets')
-            if recent_stake_wallets:
-                recent_stake_wallets = json.loads(recent_stake_wallets)
-            else:
-                recent_stake_wallets = {}
-
-            cache_db_batch.put(b'recent_stake_wallets', json.dumps(recent_stake_wallets).encode())
+        recent_stake_wallets = cache_db.get(b'recent_stake_wallets')
+        if recent_stake_wallets:
+            recent_stake_wallets = json.loads(recent_stake_wallets)
         else:
-            recent_stake_wallets = None
+            recent_stake_wallets = {}
+            state_changed = 1
+
+        # Clean stake records that are out of pre-defined timespan
+        min_height = height - Transform.TIMESPAN
+        for addr in list(recent_stake_wallets):
+            if int(recent_stake_wallets[addr].split(':')[0]) < min_height:
+                recent_stake_wallets.pop(addr)
+                state_changed = 1
+
+        for addr, val in set_stake_wallets.items():
+            recent_stake_wallets[addr] = f'{height}:{val}'
+
+        if state_changed:
+            recent_stake_wallets = {
+                k: v
+                for k, v in sorted(
+                    recent_stake_wallets.items(), key=lambda item: item[1], reverse=1
+                )
+            }
+            if len(recent_stake_wallets) > Transform.MAX_WALLETS:
+                top100_addresses = list(recent_stake_wallets)[:Transform.MAX_WALLETS]
+                recent_stake_wallets = {
+                    k: v for k, v in recent_stake_wallets.items() if k in top100_addresses
+                }
+
+        cache_db_batch.put(b'recent_stake_wallets', json.dumps(recent_stake_wallets).encode())
 
         cache_db_batch.put(Transform.LAST_STATE_HEIGHT_KEY, str(height).encode())
         cache_db_batch.write()

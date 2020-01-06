@@ -71,3 +71,18 @@ class Collator(BaseCollator):
             return r['data']
         else:
             return None
+
+    ###########################################
+    # For `recent_stake_wallets` transform only
+    #
+    async def recent_stake_wallets(self, transform_id: str) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='recent_stake_wallets',
+            api_params={'transform_id': transform_id},
+        )
+        if r['status']:
+            return r['data']
+        else:
+            return None

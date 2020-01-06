@@ -120,7 +120,9 @@ class DataFeeder(BaseDataFeeder):
     async def get_block(self, height: int, transform_id: str, verbose: bool = 0) -> Optional[dict]:
         if transform_id == 'stake_history':
             return await self._get_block_stake_tx(height, verbose)
-        if transform_id == 'stake_top100':
+        elif transform_id == 'stake_top100':
+            return await self._get_block_stake_tx(height, verbose)
+        elif transform_id == 'recent_stake_wallets':
             return await self._get_block_stake_tx(height, verbose)
 
     async def last_block_height(self) -> Optional[int]:

@@ -91,6 +91,8 @@ class Storage(BaseStorage):
     LATEST_UNSTAKE_STATE_HEIGHT_KEY = b'latest_unstake_state_height'
     LATEST_STAKE_TOP100_KEY = b'latest_stake_top100'
     LATEST_STAKE_TOP100_HEIGHT_KEY = b'latest_stake_top100_height'
+    RECENT_STAKE_WALLETS_KEY = b'recent_stake_wallets'
+    RECENT_STAKE_WALLETS_HEIGHT_KEY = b'recent_stake_wallets_height'
 
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
@@ -222,6 +224,37 @@ class Storage(BaseStorage):
         wallets = db.get(Storage.LATEST_STAKE_TOP100_KEY)
         wallets = json.loads(wallets.decode()) if wallets else None
         height = db.get(Storage.LATEST_STAKE_TOP100_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
+
+        return {'wallets': wallets, 'height': height}
+
+    ###########################################
+    # For `recent_stake_wallets` transform only
+    #
+    async def set_recent_stake_wallets(self, api_params: dict) -> bool:
+        recent_stake_wallets: dict = api_params['recent_stake_wallets']
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+        if recent_stake_wallets['wallets'] is not None:
+            db.put(
+                Storage.RECENT_STAKE_WALLETS_KEY,
+                json.dumps(recent_stake_wallets['wallets']).encode(),
+            )
+        db.put(
+            Storage.RECENT_STAKE_WALLETS_HEIGHT_KEY, str(recent_stake_wallets['height']).encode(),
+        )
+        db.put(Storage.LAST_BLOCK_HEIGHT_KEY, str(recent_stake_wallets['height']).encode())
+
+        return 1
+
+    async def recent_stake_wallets(self, api_params: dict) -> dict:
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+        wallets = db.get(Storage.RECENT_STAKE_WALLETS_KEY)
+        wallets = json.loads(wallets.decode()) if wallets else None
+        height = db.get(Storage.RECENT_STAKE_WALLETS_HEIGHT_KEY)
         height = int(height.decode()) if height else None
 
         return {'wallets': wallets, 'height': height}

@@ -71,3 +71,7 @@ class ApiBundle(BaseApiBundle):
 
     async def latest_stake_top100(self, api_params: dict) -> Optional[dict]:
         return await self.collator.latest_stake_top100('stake_top100')
+
+    async def recent_stake_wallets(self, api_params: dict) -> Optional[dict]:
+        return await self.collator.recent_stake_wallets('recent_stake_wallets')
+

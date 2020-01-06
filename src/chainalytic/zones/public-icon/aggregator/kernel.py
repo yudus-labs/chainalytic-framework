@@ -50,4 +50,15 @@ class Kernel(BaseKernel):
                 },
             )
             return r['status']
+        elif transform_id == 'recent_stake_wallets':
+            r = await rpc_client.call_async(
+                self.warehouse_endpoint,
+                call_id='api_call',
+                api_id='set_recent_stake_wallets',
+                api_params={
+                    'recent_stake_wallets': output['misc']['recent_stake_wallets'],
+                    'transform_id': transform_id,
+                },
+            )
+            return r['status']
 

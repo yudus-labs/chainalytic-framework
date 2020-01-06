@@ -305,7 +305,7 @@ class Console(object):
             curses.nocbreak()
             curses.endwin()
 
-    def monitor_stake_top100(
+    def monitor_basic(
         self,
         zone_id: str,
         transform_id: str,
@@ -431,8 +431,8 @@ class Console(object):
 
         if transform_id == 'stake_history' and transform_id in all_transforms:
             self.monitor_stake_history(zone_id, transform_id, provider_client, stdscr, refresh_time)
-        elif transform_id == 'stake_top100' and transform_id in all_transforms:
-            self.monitor_stake_top100(zone_id, transform_id, provider_client, stdscr, refresh_time)
+        elif transform_id in all_transforms:
+            self.monitor_basic(zone_id, transform_id, provider_client, stdscr, refresh_time)
         else:
             curses.echo()
             curses.nocbreak()
