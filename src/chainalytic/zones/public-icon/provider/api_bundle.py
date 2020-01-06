@@ -1,5 +1,5 @@
 """
-Exposed APIs
+Example API call
 
 from chainalytic.common import rpc_client
 
@@ -8,30 +8,6 @@ rpc_client.call_aiohttp(
     call_id='api_call',
     api_id='get_staking_info',
     api_params={'height': 9999999}
-)
-rpc_client.call_aiohttp(
-    'localhost:5530',
-    call_id='api_call',
-    api_id='last_block_height',
-    api_params={'transform_id': 'stake_history'}
-)
-rpc_client.call_aiohttp(
-    'localhost:5530',
-    call_id='api_call',
-    api_id='get_staking_info_last_block',
-    api_params={}
-)
-rpc_client.call_aiohttp(
-    'localhost:5530',
-    call_id='api_call',
-    api_id='latest_unstake_state',
-    api_params={}
-)
-rpc_client.call_aiohttp(
-    'localhost:5530',
-    call_id='api_call',
-    api_id='latest_stake_top100',
-    api_params={}
 )
 
 """
@@ -74,4 +50,3 @@ class ApiBundle(BaseApiBundle):
 
     async def recent_stake_wallets(self, api_params: dict) -> Optional[dict]:
         return await self.collator.recent_stake_wallets('recent_stake_wallets')
-

@@ -87,3 +87,11 @@ latest_stake_top100
 
 "api_params": {}
 ----
+
+recent_stake_wallets
+[source]
+----
+"api_id": "recent_stake_wallets"
+
+"api_params": {}
+----
