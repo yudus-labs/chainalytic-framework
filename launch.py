@@ -2,7 +2,7 @@ import argparse
 import sys
 import time
 
-from chainalytic.hub import Console
+from chainalytic.cli import Console
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
