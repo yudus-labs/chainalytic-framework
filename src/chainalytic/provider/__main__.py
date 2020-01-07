@@ -39,7 +39,7 @@ async def _call(call_id: str, **kwargs):
         return EXIT_SERVICE
     elif call_id == 'api_call':
         api_id = params['api_id']
-        api_params = params['api_params']
+        api_params = params['api_params'] if 'api_params' in params else {}
         return await _PROVIDER.api_bundle.api_call(api_id, api_params)
     else:
         return f'Not implemented'
