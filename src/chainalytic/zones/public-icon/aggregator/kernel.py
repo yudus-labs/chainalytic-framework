@@ -61,4 +61,15 @@ class Kernel(BaseKernel):
                 },
             )
             return r['status']
+        elif transform_id == 'abstention_stake':
+            r = await rpc_client.call_async(
+                self.warehouse_endpoint,
+                call_id='api_call',
+                api_id='set_abstention_stake',
+                api_params={
+                    'abstention_stake': output['misc']['abstention_stake'],
+                    'transform_id': transform_id,
+                },
+            )
+            return r['status']
 

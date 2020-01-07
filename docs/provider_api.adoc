@@ -95,3 +95,11 @@ recent_stake_wallets
 
 "api_params": {}
 ----
+
+abstention_stake
+[source]
+----
+"api_id": "abstention_stake"
+
+"api_params": {}
+----

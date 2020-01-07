@@ -69,7 +69,7 @@ class Transform(BaseTransform):
                 )
             }
             if len(recent_stake_wallets) > Transform.MAX_WALLETS:
-                top100_addresses = list(recent_stake_wallets)[:Transform.MAX_WALLETS]
+                top100_addresses = list(recent_stake_wallets)[: Transform.MAX_WALLETS]
                 recent_stake_wallets = {
                     k: v for k, v in recent_stake_wallets.items() if k in top100_addresses
                 }
@@ -84,5 +84,10 @@ class Transform(BaseTransform):
         return {
             'height': height,
             'data': {},
-            'misc': {'recent_stake_wallets': {'wallets': recent_stake_wallets, 'height': height}},
+            'misc': {
+                'recent_stake_wallets': {
+                    'wallets': recent_stake_wallets if state_changed else None,
+                    'height': height,
+                }
+            },
         }

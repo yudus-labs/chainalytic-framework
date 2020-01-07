@@ -86,3 +86,18 @@ class Collator(BaseCollator):
             return r['data']
         else:
             return None
+
+    #######################################
+    # For `abstention_stake` transform only
+    #
+    async def abstention_stake(self, transform_id: str) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='abstention_stake',
+            api_params={'transform_id': transform_id},
+        )
+        if r['status']:
+            return r['data']
+        else:
+            return None

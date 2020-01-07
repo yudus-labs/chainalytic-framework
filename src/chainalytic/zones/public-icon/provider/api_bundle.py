@@ -50,3 +50,6 @@ class ApiBundle(BaseApiBundle):
 
     async def recent_stake_wallets(self, api_params: dict) -> Optional[dict]:
         return await self.collator.recent_stake_wallets('recent_stake_wallets')
+
+    async def abstention_stake(self, api_params: dict) -> Optional[dict]:
+        return await self.collator.abstention_stake('abstention_stake')

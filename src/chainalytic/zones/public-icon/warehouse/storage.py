@@ -93,6 +93,8 @@ class Storage(BaseStorage):
     LATEST_STAKE_TOP100_HEIGHT_KEY = b'latest_stake_top100_height'
     RECENT_STAKE_WALLETS_KEY = b'recent_stake_wallets'
     RECENT_STAKE_WALLETS_HEIGHT_KEY = b'recent_stake_wallets_height'
+    ABSTENTION_STAKE_KEY = b'abstention_stake'
+    ABSTENTION_STAKE_HEIGHT_KEY = b'abstention_stake_height'
 
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
@@ -255,6 +257,36 @@ class Storage(BaseStorage):
         wallets = db.get(Storage.RECENT_STAKE_WALLETS_KEY)
         wallets = json.loads(wallets.decode()) if wallets else None
         height = db.get(Storage.RECENT_STAKE_WALLETS_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
+
+        return {'wallets': wallets, 'height': height}
+
+    ###########################################
+    # For `abstention_stake` transform only
+    #
+    async def set_abstention_stake(self, api_params: dict) -> bool:
+        abstention_stake: dict = api_params['abstention_stake']
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+        if abstention_stake['wallets'] is not None:
+            db.put(
+                Storage.ABSTENTION_STAKE_KEY, json.dumps(abstention_stake['wallets']).encode(),
+            )
+        db.put(
+            Storage.ABSTENTION_STAKE_HEIGHT_KEY, str(abstention_stake['height']).encode(),
+        )
+        db.put(Storage.LAST_BLOCK_HEIGHT_KEY, str(abstention_stake['height']).encode())
+
+        return 1
+
+    async def abstention_stake(self, api_params: dict) -> dict:
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+        wallets = db.get(Storage.ABSTENTION_STAKE_KEY)
+        wallets = json.loads(wallets.decode()) if wallets else None
+        height = db.get(Storage.ABSTENTION_STAKE_HEIGHT_KEY)
         height = int(height.decode()) if height else None
 
         return {'wallets': wallets, 'height': height}

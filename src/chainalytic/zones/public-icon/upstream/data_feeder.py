@@ -89,8 +89,7 @@ class DataFeeder(BaseDataFeeder):
         return self.icon_service.get_block('latest')['height']
 
     async def _get_block_stake_tx(self, height: int, verbose: bool = 0) -> Optional[dict]:
-        """Retrieve standard block data from chain for `stake_history`
-        """
+        """Retrieve `setStake` txs."""
         if verbose:
             print(f'Feeding block: {height}')
 
@@ -139,6 +138,62 @@ class DataFeeder(BaseDataFeeder):
             'total_supply': self._get_total_supply(),
         }
 
+    async def _get_block_stake_delegation_tx(
+        self, height: int, verbose: bool = 0
+    ) -> Optional[dict]:
+        """Retrieve `setStake` and `setDelegation` txs."""
+        if verbose:
+            print(f'Feeding block: {height}')
+
+        block = self._get_block(height)
+        if not block:
+            if verbose:
+                print('--Block not found')
+            return None
+
+        try:
+            if height < V3_BLOCK_HEIGHT or not self.direct_db_access:
+                txs = block['confirmed_transaction_list']
+                timestamp = block['time_stamp']
+            else:
+                txs = block['transactions']
+                timestamp = int(block['timestamp'], 16)
+
+        except Exception:
+            if verbose:
+                print('--ERROR in block data loading, skipped feeding')
+            return None
+
+        try:
+            set_stake_wallets = {}
+            set_delegation_wallets = {}
+            for tx in txs:
+                if 'data' not in tx:
+                    continue
+                if 'method' not in tx['data']:
+                    continue
+                if tx['data']['method'] == 'setStake':
+                    try:
+                        stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
+                        set_stake_wallets[tx["from"]] = stake_value
+                    except ValueError:
+                        pass
+                elif tx['data']['method'] == 'setDelegation':
+                    set_delegation_wallets[tx["from"]] = tx['data']['params']['delegations']
+
+        except Exception as e:
+            if verbose:
+                print('ERROR in data pre-processing')
+                print(e)
+                print(traceback.format_exc())
+            return None
+
+        return {
+            'data': {'stake': set_stake_wallets, 'delegation': set_delegation_wallets},
+            'timestamp': timestamp,
+            'total_supply': self._get_total_supply(),
+        }
+
     async def get_block(self, height: int, transform_id: str, verbose: bool = 0) -> Optional[dict]:
         if transform_id == 'stake_history':
             return await self._get_block_stake_tx(height, verbose)
@@ -146,6 +201,8 @@ class DataFeeder(BaseDataFeeder):
             return await self._get_block_stake_tx(height, verbose)
         elif transform_id == 'recent_stake_wallets':
             return await self._get_block_stake_tx(height, verbose)
+        elif transform_id == 'abstention_stake':
+            return await self._get_block_stake_delegation_tx(height, verbose)
 
     async def last_block_height(self) -> Optional[int]:
         """Get last block height from chain
