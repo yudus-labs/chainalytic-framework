@@ -18,6 +18,18 @@ Producer default endpoint: `http://localhost:5530`
 }
 ----
 
+*Response result format*
+[source]
+----
+{
+    'status': bool,
+    'data': {
+        'status': bool,
+        'result': Any
+    } or Error message
+}
+----
+
 *Example*
 
 Call `last_block_height` of transform `stake_history`
@@ -35,9 +47,23 @@ Call `last_block_height` of transform `stake_history`
 }
 ----
 
+Result
+[source]
+----
+{
+    'status': 1,
+    'data': {
+        'status': 1,
+        'result': 12000000
+    }
+}
+----
+
 ## API Reference
 
 _For convenience, API reference contains only_ `api_id` _and_ `api_params`
+
+_In response return, it covers only format of_ `response['data']['result']`
 
 ### Zone `public-icon`
 
@@ -46,64 +72,159 @@ List of `TRANSFORM_ID`:
 ----
 stake_history
 stake_top100
+recent_stake_wallets
+abstention_stake
 ----
 
-*last_block_height*
+#### last_block_height
 
 Ask for the last block height value of latest aggregated block of one specific transform
+
+_Params_
 [source]
 ----
 "api_id": "last_block_height"
 
 "api_params": {"transform_id": <TRANSFORM_ID: str>}
 ----
+_Return_
+[source]
+----
+int
+----
 
-*get_staking_info_last_block*
+#### get_staking_info_last_block
 
 Basic stake metrics of the chain at latest block
+
+_Params_
 [source]
 ----
 "api_id": "get_staking_info_last_block"
 ----
+_Return_
+[source]
+----
+{
+    'execution_time': '{time_in_seconds}s',
+    'height': <BLOCK_HEIGHT: int>,
+    'timestamp': <UNIX_TIMESTAMP: int>,
+    'total_staking': float,
+    'total_staking_wallets': int,
+    'total_unstaking': float,
+    'total_unstaking_wallets': int
+}
+----
 
-*get_staking_info*
+#### get_staking_info
 
 Basic stake metrics of the chain at one specific block in the past
+
+_Params_
 [source]
 ----
 "api_id": "get_staking_info"
 
 "api_params": {"height": <BLOCK_HEIGHT: int>}
 ----
+_Return_
+[source]
+----
+{
+    'execution_time': '{time_in_seconds}s',
+    'height': <BLOCK_HEIGHT: int>,
+    'timestamp': <UNIX_TIMESTAMP: int>,
+    'total_staking': float,
+    'total_staking_wallets': int,
+    'total_unstaking': float,
+    'total_unstaking_wallets': int
+}
+----
 
-*latest_unstake_state*
+#### latest_unstake_state
 
 List of wallets being in unlock period ( unstaking )
+
+_Params_
 [source]
 ----
 "api_id": "latest_unstake_state"
 ----
+_Return_
+[source]
+----
+{
+    'height': int,
+    'wallets': {
+        <ADDRESS: str>: '{staking_amount}:{unlocking_amount}:{request_height}:{unlock_height}',
+        ...
+    }
+}
+----
 
-*latest_stake_top100*
+#### latest_stake_top100
 
-Latest list of top100 staking wallets
+Latest sorted list of top 100 staking wallets
+
+_Params_
 [source]
 ----
 "api_id": "latest_stake_top100"
 ----
+_Return_
+[source]
+----
+{
+    'height': int,
+    'wallets': {
+        <ADDRESS: str>: <STAKE_AMOUNT: float>,
+        ...
+    }
+}
+----
 
-*recent_stake_wallets*
+#### recent_stake_wallets
 
 List of recently stake wallets, ordered by block height
+
+Limited to 200 wallets at max
+
+_Params_
 [source]
 ----
 "api_id": "recent_stake_wallets"
 ----
+_Return_
+[source]
+----
+{
+    'height': int,
+    'wallets': {
+        <ADDRESS: str>: '{block_height}:{stake_amount}',
+        ...
+    }
+}
+----
 
-*abstention_stake*
+#### abstention_stake
 
-Latest list of wallets that already staked but not voting all staked ICX
+Latest sorted list of wallets that already staked but not voting all staked ICX
+
+Limited to 200 wallets at max
+
+_Params_
 [source]
 ----
 "api_id": "abstention_stake"
+----
+_Return_
+[source]
+----
+{
+    'height': int,
+    'wallets': {
+        <ADDRESS: str>: '{stake_amount}:{delegation_amount}',
+        ...
+    }
+}
 ----
