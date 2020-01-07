@@ -48,7 +48,9 @@ stake_history
 stake_top100
 ----
 
-last_block_height
+*last_block_height*
+
+Ask for the last block height value of latest aggregated block of one specific transform
 [source]
 ----
 "api_id": "last_block_height"
@@ -56,15 +58,17 @@ last_block_height
 "api_params": {"transform_id": <TRANSFORM_ID: str>}
 ----
 
-get_staking_info_last_block
+*get_staking_info_last_block*
+
+Basic stake metrics of the chain at latest block
 [source]
 ----
 "api_id": "get_staking_info_last_block"
-
-"api_params": {}
 ----
 
-get_staking_info
+*get_staking_info*
+
+Basic stake metrics of the chain at one specific block in the past
 [source]
 ----
 "api_id": "get_staking_info"
@@ -72,34 +76,34 @@ get_staking_info
 "api_params": {"height": <BLOCK_HEIGHT: int>}
 ----
 
-latest_unstake_state
+*latest_unstake_state*
+
+List of wallets being in unlock period ( unstaking )
 [source]
 ----
 "api_id": "latest_unstake_state"
-
-"api_params": {}
 ----
 
-latest_stake_top100
+*latest_stake_top100*
+
+Latest list of top100 staking wallets
 [source]
 ----
 "api_id": "latest_stake_top100"
-
-"api_params": {}
 ----
 
-recent_stake_wallets
+*recent_stake_wallets*
+
+List of recently stake wallets, ordered by block height
 [source]
 ----
 "api_id": "recent_stake_wallets"
-
-"api_params": {}
 ----
 
-abstention_stake
+*abstention_stake*
+
+Latest list of wallets that already staked but not voting all staked ICX
 [source]
 ----
 "api_id": "abstention_stake"
-
-"api_params": {}
 ----
