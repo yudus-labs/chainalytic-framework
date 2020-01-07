@@ -1,78 +1,73 @@
 """
 Exposed APIs
 
-from chainalytic.common import rpc_client
+api_id='put_block'
+api_params={
+    height: int,
+    data: Union,
+    transform_id: str,
+}
 
-rpc_client.call_async(
-    'localhost:5520',
-    call_id='api_call',
-    api_id='put_block',
-    api_params={
-        height: int,
-        data: Union,
-        transform_id: str,
-    }
-)
-rpc_client.call_async(
-    'localhost:5520',
-    call_id='api_call',
-    api_id='get_block',
-    api_params={
-        height: int,
-        transform_id: str,
-    }
-)
-rpc_client.call_async(
-    'localhost:5520',
-    call_id='api_call',
-    api_id='last_block_height',
-    api_params={
-        transform_id: str,
-    }
-)
-rpc_client.call_async(
-    'localhost:5520',
-    call_id='api_call',
-    api_id='set_last_block_height',
-    api_params={
-        height: int,
-        transform_id: str,
-    }
-)
-rpc_client.call_async(
-    'localhost:5520',
-    call_id='api_call',
-    api_id='set_latest_unstake_state',
-    api_params={
-        unstake_state: dict,
-        transform_id: str,
-    }
-)
-rpc_client.call_async(
-    'localhost:5520',
-    call_id='api_call',
-    api_id='latest_unstake_state',
-    api_params={
-        transform_id: str,
-    }
-)
-rpc_client.call_async(
-    'localhost:5520',
-    call_id='api_call',
-    api_id='set_latest_stake_top100',
-    api_params={
-        unstake_state: dict,
-        transform_id: str,
-    }
-)
-rpc_client.call_async(
-    'localhost:5520',
-    call_id='api_call',
-    api_id='latest_stake_top100',
-    api_params={
-        transform_id: str,
-    }
-)
+api_id='get_block'
+api_params={
+    height: int,
+    transform_id: str,
+}
+
+api_id='last_block_height'
+api_params={
+    transform_id: str,
+}
+
+api_id='set_last_block_height'
+api_params={
+    height: int,
+    transform_id: str,
+}
+
+api_id='set_latest_unstake_state'
+api_params={
+    unstake_state: dict,
+    transform_id: 'stake_history',
+}
+
+api_id='latest_unstake_state'
+api_params={
+    transform_id: 'stake_history',
+}
+
+api_id='set_latest_stake_top100'
+api_params={
+    unstake_state: dict,
+    transform_id: 'stake_top100',
+}
+
+api_id='latest_stake_top100'
+api_params={
+    transform_id: 'stake_top100',
+}
+
+api_id='set_recent_stake_wallets'
+api_params={
+    unstake_state: dict,
+    transform_id: 'recent_stake_wallets',
+}
+
+api_id='recent_stake_wallets'
+api_params={
+    transform_id: 'recent_stake_wallets',
+}
+
+api_id='set_abstention_stake'
+api_params={
+    unstake_state: dict,
+    transform_id: 'abstention_stake',
+}
+
+api_id='abstention_stake'
+api_params={
+    transform_id: 'abstention_stake',
+}
 
 """
 
@@ -261,7 +256,7 @@ class Storage(BaseStorage):
 
         return {'wallets': wallets, 'height': height}
 
-    ###########################################
+    #######################################
     # For `abstention_stake` transform only
     #
     async def set_abstention_stake(self, api_params: dict) -> bool:
