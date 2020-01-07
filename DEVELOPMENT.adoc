@@ -1,4 +1,4 @@
-#### Setup dev environment
+### Setup dev environment
 
 Create virtual env and source it +
 `python3.7 -m venv venv` +
@@ -14,11 +14,16 @@ Testing config is defined in `tox.ini` and `MANIFEST.ini`
 
 #### Testing
 
-This project uses `tox` and `pytest` for automated test. +
-To run all tests, in current virtual env, run +
-`tox`
+_Note that, we are still in prototype phase and need to iterate as fast as possible, there is almost no serious unit testing at all._
 
-#### Docker deploy setup for testing and building new data transform modules
+This project uses `tox` and `pytest` for automated test. +
+To run all tests, in current virtual env, run
+[source]
+----
+tox
+----
+
+### Docker deploy setup for testing and building new data transform modules
 
 *Assume you are currently in a directory like below*
 
@@ -41,6 +46,7 @@ To run all tests, in current virtual env, run +
 version: '3'
 services:
   chainalytic_dev:
+    build: .
     image: duyyudus/chainalytic:dev
     container_name: chainalytic_dev
     restart: "always"
