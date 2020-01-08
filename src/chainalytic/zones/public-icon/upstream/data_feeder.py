@@ -107,9 +107,11 @@ class DataFeeder(BaseDataFeeder):
                 txs = block['transactions']
                 timestamp = int(block['timestamp'], 16)
 
-        except Exception:
+        except Exception as e:
             if verbose:
-                print('--ERROR in block data loading, skipped feeding')
+                print('ERROR in block data loading, skipped feeding')
+                print(e)
+                print(traceback.format_exc())
             return None
 
         try:
@@ -124,7 +126,9 @@ class DataFeeder(BaseDataFeeder):
                         stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
                         set_stake_wallets[tx["from"]] = stake_value
                     except ValueError:
-                        pass
+                        if verbose:
+                            print(f'ERROR in setStake transaction: {tx}')
+
         except Exception as e:
             if verbose:
                 print('ERROR in data pre-processing')
@@ -159,9 +163,11 @@ class DataFeeder(BaseDataFeeder):
                 txs = block['transactions']
                 timestamp = int(block['timestamp'], 16)
 
-        except Exception:
+        except Exception as e:
             if verbose:
-                print('--ERROR in block data loading, skipped feeding')
+                print('ERROR in block data loading, skipped feeding')
+                print(e)
+                print(traceback.format_exc())
             return None
 
         try:
@@ -177,9 +183,15 @@ class DataFeeder(BaseDataFeeder):
                         stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
                         set_stake_wallets[tx["from"]] = stake_value
                     except ValueError:
-                        pass
+                        if verbose:
+                            print(f'ERROR in setStake transaction: {tx}')
+
                 elif tx['data']['method'] == 'setDelegation':
-                    set_delegation_wallets[tx["from"]] = tx['data']['params']['delegations']
+                    try:
+                        set_delegation_wallets[tx["from"]] = tx['data']['params']['delegations']
+                    except KeyError:
+                        if verbose:
+                            print(f'ERROR in setDelegation transaction: {tx}')
 
         except Exception as e:
             if verbose:
@@ -194,7 +206,7 @@ class DataFeeder(BaseDataFeeder):
             'total_supply': self._get_total_supply(),
         }
 
-    async def get_block(self, height: int, transform_id: str, verbose: bool = 0) -> Optional[dict]:
+    async def get_block(self, height: int, transform_id: str, verbose: bool = 1) -> Optional[dict]:
         if transform_id == 'stake_history':
             return await self._get_block_stake_tx(height, verbose)
         elif transform_id == 'stake_top100':
