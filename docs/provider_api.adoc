@@ -1,5 +1,8 @@
 ## Producer service JSON-RPC APIs
 
+NOTE: _This is *not* supposed to be the public APIs which is called directly by users. +
+If you want to provide such APIs to the public, you should use this API as the private service which feeds data to your public facing REST APIs server._
+
 Producer default endpoint: `http://localhost:5530`
 
 *HTTP POST request format for all APIs*

@@ -11,22 +11,24 @@ First, please take a look at link:README.adoc[README] to know what Chainalytic i
 
 Right after the decentralization of ICON mainnet, my team - ICONVIET - was starting to build a more advanced explorer/tracker for ICON public chain. People of ICON deserve a better chain explorer. However, although the official JSON-RPC API is good enough for basic needs, it is lacking of many fine-grained information and data, which would be very helpful to ICONists and dev teams need to interact with data on the chain.
 
-Let's dig a bit deeper into what exactly derived data is. Basically, there are 2 mains categories
+Let's dig a bit deeper into what exactly derived data is. Basically, there are 2 main categories
 
-- Historical time series data
- * For instance, the total amount of staked ICX at some specific block height, for all blocks from starting block to latest one
-- Chain state data
- * For instance, the list of wallets currently in unlocking period ( unstaking )
+- Timelapse/Historical time series data, for instance
+ * Total amount of staked ICX at some specific block height, for all blocks produced over time, from starting block to latest one
+ * Total number of transactions over time, with resoluton to blocks ( time unit )
+- Chain state data, for instance
+ * List of wallets currently in unlocking period ( unstaking )
+ * List of wallets which currently hold some minimum amount of ICX
 
-Both are updated after each block as the result, via the execution of on-chain `transactions` ( also known as `transition functions` ). Hence, depend on your own need, historical and state data would variate a lot. Apparently, they need to be derived/generated differently for each specific requirement.
+Both are updated for each block as the result, via the execution of on-chain `transactions` ( also known as `transition functions` ). Hence, depend on your own need, historical and state data would variate a lot. Apparently, they need to be derived/generated differently for each specific requirement.
 
 Even if the official API provides more data and metric, it simply cannot serve every demand. The amount of derivable data is almost infinite. Individual ICONists and dev teams probably need specific and unique kind of data derived from on-chain state transitions over time. With all those facts, baking all derived data into the chain database is unrealistic and potentially making the chain unnecessarily huge.
 
 So, what should we do to get more data ? Here is a few approaches
 
-- Using official API, we query current latest block TX data, then calculate, generate and store new data on-the-fly. The issue is, it only works for...future blocks. For old blocks we missed, they are gone forever.
+- Using official API, we query current latest block TX data, then calculate, generate and store new data on-the-fly. The issue is, it only works for...future blocks. For past blocks we missed, they are gone forever.
 
-- Using official API, we query TX data from the very first blocks and do all transaction executions from scratch. It is somewhat like re-executing the chain from beginning, the most canonical approach. However, feeding data via official RPC API is very slow. And for every new kind of data we desire, we need to re-implement data aggregation logic. As we see, this approach is not so efficient and scalable.
+- Using official API, we query TX data from the very first blocks and do all transaction executions from scratch. It is somewhat like re-executing the chain from beginning, the most canonical approach. However, feeding data via official RPC API is very slow. And for every new kind of data we desire, we need to re-implement data aggregation logic. As we see, this approach itself alone is not so efficient and scalable.
 
 - Same approach as above one, re-execution of transactions. However we push it further to some sort of "framework" or "engine". In this way, we aim to build a framework which is designed to be easily customized and extended, good performance, as well as come with many choices in upstream/source data feeding method. Ultimately, it must be efficient, scalable, and easy for developer to add functionality. Yeah, *Chainalytic* was born to satisfy them all.
 
@@ -34,7 +36,7 @@ So, what should we do to get more data ? Here is a few approaches
 
 In favor of *modularity*, *extensibility* and *chain-agnostic*, I decided to make Chainalytic a multi-process/multi-service application which is also an extensible framework itself.
 
-Basically, it has 4 components ( 4 services ), which can run in the same machine/host or in different machines/hosts. These services talk to each other via *JSON-RPC API* running on top of *Asynchronous WebSocket* as underlying transfer protocol.
+Basically, it has 4 components ( 4 services ), which can run in the same machine/host or in different ones. These services talk to each other via *JSON-RPC API* running on top of *Asynchronous WebSocket* as underlying transfer protocol.
 
 - Upstream
 - Aggregator
@@ -53,7 +55,7 @@ It offers 2 choices of data feeding from blockchain node client software
 
 - Read data directly from client database for optimum performance ( `LevelDB` in case of ICON ). Due to LevelDB restriction of single access instance, client ( ICON citizen node ) must be shutdown before feeding data. +
 Should use this for new data aggregation from scratch.
-- Request for data via RPC calls to client using official API. In this way client can keep running, and data is almost fed in realtime with client. +
+- Request for data via RPC calls to client using official API. In this way client can keep running, and data is almost fed in realtime from client. +
 Should use this if data is already fully aggregated recently.
 
 ### Aggregator

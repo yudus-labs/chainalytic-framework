@@ -10,21 +10,21 @@ link:docs/provider_api.adoc[Jump to Provider service API reference]
 
 ## The Purpose
 
+NOTE: _This is *not* the tool that simply extracts block/txs data and dumps to other databases (e.g. SQL, NoSQL, BigQuery ... )_
+
 There is a huge amount of data deep
 inside blockchains which could bring
 potential valuable insights. +
 
-*This framework focuses on* 
+*This framework focuses on*
 
-- _Generate *implicit* historical blockchain data from transactions ( transition functions )_
-- _Realtime time-series data derivation/aggregation_
+- _Derive *implicit* blockchain data using *transactions* as input ( transition functions )_
+- _Realtime/offline time-series data derivation/aggregation_
 - _Maintain independent and diverse chain-states_
 
 *It helps to easily extract, transform, aggregate
 and generate new data using your own rule
 in a modular style.*
-
-*Note*: it is *not* the tool that simply extracts block/txs data and dumps to big-data dataset (e.g. BigQuery)
 
 It targets developers/analysts who are interested in building application or research on
 
@@ -55,13 +55,15 @@ Take care of all storage tasks
 
 *_Provider, service ID = 3_*
 
-Communicate with Warehouse and ask for aggregated data, then provide it to external applications via public APIs
+Communicate with Warehouse and ask for aggregated data, then provide it to external applications via *aiohttp* JSON-RPC APIs
 
 ### Chainalytic Console
 
 Handle data aggregation monitoring.
 
 ## Quick start
+
+link:DEVELOPMENT.adoc[Go to development guide here]
 
 *Prerequisite*
 
@@ -114,10 +116,13 @@ zones:
 
 Default `TRANSFORM_ID` is `stake_history`
 
-List of transform IDs:
+List of `TRANSFORM_ID`:
+[source]
 ----
 stake_history
 stake_top100
+recent_stake_wallets
+abstention_stake
 ----
 
 *Terminate all services*

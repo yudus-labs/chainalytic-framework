@@ -14,7 +14,7 @@ Testing config is defined in `tox.ini` and `MANIFEST.ini`
 
 #### Testing
 
-_Note that, we are still in prototype phase and need to iterate as fast as possible, there is almost no serious unit testing at all._
+NOTE: _We are still in prototype phase and need to iterate as fast as possible, there is almost no serious unit testing at all._
 
 This project uses `tox` and `pytest` for automated test. +
 To run all tests, in current virtual env, run
