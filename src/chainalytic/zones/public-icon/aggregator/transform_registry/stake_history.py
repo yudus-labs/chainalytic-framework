@@ -117,6 +117,7 @@ class Transform(BaseTransform):
                 ) = addr_data.split(b':')
                 prev_stake_value = float(prev_stake_value)
                 prev_unstaking_value = float(prev_unstaking_value)
+                request_height = int(request_height)
                 unlock_height = int(unlock_height)
             else:
                 prev_stake_value = prev_unstaking_value = request_height = unlock_height = 0
