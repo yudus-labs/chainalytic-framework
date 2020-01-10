@@ -226,7 +226,7 @@ _Return_
 {
     'height': int,
     'wallets': {
-        <ADDRESS: str>: '{stake_amount}:{delegation_amount}',
+        <ADDRESS: str>: '{stake_amount}:{delegation_amount}:{undelegated_amount}',
         ...
     }
 }

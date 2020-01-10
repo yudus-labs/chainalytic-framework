@@ -54,16 +54,18 @@ class Transform(BaseTransform):
         for addr, val in set_stake_wallets.items():
             addr_data = cache_db.get(addr.encode())
             if addr_data:
-                stake, delegation = addr_data.split(b':')
+                stake, delegation, unvoted = addr_data.split(b':')
                 stake = val
                 delegation = float(delegation)
+                unvoted = round(stake - delegation, 4)
             else:
                 stake = delegation = 0
                 stake = val
+                unvoted = round(stake - delegation, 4)
 
-            addr_data = f'{stake}:{delegation}'
+            addr_data = f'{stake}:{delegation}:{unvoted}'
 
-            if stake - delegation > 1 and stake > 0:
+            if unvoted > 3 and stake > 0:
                 abstention_stake[addr] = addr_data
             elif addr in abstention_stake:
                 abstention_stake.pop(addr)
@@ -87,16 +89,18 @@ class Transform(BaseTransform):
 
             addr_data = cache_db.get(addr.encode())
             if addr_data:
-                stake, delegation = addr_data.split(b':')
+                stake, delegation, unvoted = addr_data.split(b':')
                 stake = float(stake)
                 delegation = delegation_val
+                unvoted = round(stake - delegation, 4)
             else:
                 stake = delegation = 0
                 delegation = delegation_val
+                unvoted = round(stake - delegation, 4)
 
-            addr_data = f'{stake}:{delegation}'
+            addr_data = f'{stake}:{delegation}:{unvoted}'
 
-            if stake - delegation > 1 and stake > 0:
+            if unvoted > 3 and stake > 0:
                 abstention_stake[addr] = addr_data
             elif addr in abstention_stake:
                 abstention_stake.pop(addr)
@@ -108,7 +112,7 @@ class Transform(BaseTransform):
                 k: v
                 for k, v in sorted(
                     abstention_stake.items(),
-                    key=lambda item: float(item[1].split(':')[0]),
+                    key=lambda item: float(item[1].split(':')[2]),
                     reverse=1,
                 )
             }
