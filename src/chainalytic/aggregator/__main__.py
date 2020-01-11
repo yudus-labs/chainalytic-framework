@@ -63,7 +63,10 @@ async def initialize():
                 warehouse_endpoint,
                 call_id='api_call',
                 api_id='set_last_block_height',
-                api_params={'height': _AGGREGATOR.kernel.START_BLOCK_HEIGHT, 'transform_id': tid},
+                api_params={
+                    'height': _AGGREGATOR.kernel.transforms[tid].START_BLOCK_HEIGHT - 1,
+                    'transform_id': tid,
+                },
             )
             print(f'--Set initial last_block_height for transform: {tid}')
     print('Initialized Aggregator service')

@@ -84,12 +84,17 @@ from chainalytic.warehouse.storage import BaseStorage
 class Storage(BaseStorage):
     LATEST_UNSTAKE_STATE_KEY = b'latest_unstake_state'
     LATEST_UNSTAKE_STATE_HEIGHT_KEY = b'latest_unstake_state_height'
+
     LATEST_STAKE_TOP100_KEY = b'latest_stake_top100'
     LATEST_STAKE_TOP100_HEIGHT_KEY = b'latest_stake_top100_height'
+
     RECENT_STAKE_WALLETS_KEY = b'recent_stake_wallets'
     RECENT_STAKE_WALLETS_HEIGHT_KEY = b'recent_stake_wallets_height'
+
     ABSTENTION_STAKE_KEY = b'abstention_stake'
     ABSTENTION_STAKE_HEIGHT_KEY = b'abstention_stake_height'
+
+    FUNDED_WALLETS_HEIGHT_KEY = b'funded_wallets_height'
 
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
@@ -286,3 +291,35 @@ class Storage(BaseStorage):
 
         return {'wallets': wallets, 'height': height}
 
+    #####################################
+    # For `funded_wallets` transform only
+    #
+    async def update_funded_wallets(self, api_params: dict) -> bool:
+        updated_wallets: dict = api_params['updated_wallets']
+        transform_id: str = api_params['transform_id']
+
+        db_batch = self.transform_storage_dbs[transform_id].write_batch()
+        for addr, balance in updated_wallets['wallets'].items():
+            db_batch.put(addr.encode(), balance.encode())
+
+        db_batch.put(Storage.FUNDED_WALLETS_HEIGHT_KEY, str(updated_wallets['height']).encode())
+        db_batch.write()
+
+        return 1
+
+    async def funded_wallets(self, api_params: dict) -> dict:
+        min_balance = api_params['min_balance']
+        transform_id: str = api_params['transform_id']
+
+        wallets = {}
+        db = self.transform_storage_dbs[transform_id]
+        for addr, balance in db:
+            if addr.startswith(b'hx') and float(balance) >= min_balance:
+                wallets[addr.decode()] = float(balance)
+
+        wallets = {k: v for k, v in sorted(wallets.items(), key=lambda item: item[1], reverse=1)}
+
+        height = db.get(Storage.FUNDED_WALLETS_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
+
+        return {'wallets': wallets, 'height': height}

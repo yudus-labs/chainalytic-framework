@@ -12,6 +12,8 @@ from chainalytic.common import rpc_client, trie
 
 
 class Transform(BaseTransform):
+    START_BLOCK_HEIGHT = FIRST_STAKE_BLOCK_HEIGHT = 7597365
+
     LAST_STATE_HEIGHT_KEY = b'last_state_height'
     TIMESPAN = 129600  # 3 days
     MAX_WALLETS = 200

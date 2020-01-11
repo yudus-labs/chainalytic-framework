@@ -101,3 +101,18 @@ class Collator(BaseCollator):
             return r['data']
         else:
             return None
+
+    #######################################
+    # For `funded_wallets` transform only
+    #
+    async def funded_wallets(self, transform_id: str, min_balance: float) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='funded_wallets',
+            api_params={'transform_id': transform_id, 'min_balance': min_balance},
+        )
+        if r['status']:
+            return r['data']
+        else:
+            return None

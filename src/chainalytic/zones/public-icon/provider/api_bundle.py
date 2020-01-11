@@ -53,3 +53,8 @@ class ApiBundle(BaseApiBundle):
 
     async def abstention_stake(self, api_params: dict) -> Optional[dict]:
         return await self.collator.abstention_stake('abstention_stake')
+
+    async def funded_wallets(self, api_params: dict) -> Optional[dict]:
+        return await self.collator.funded_wallets(
+            'funded_wallets', float(api_params['min_balance']) if 'min_balance' in api_params else 1
+        )
