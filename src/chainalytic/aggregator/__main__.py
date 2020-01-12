@@ -8,12 +8,15 @@ import websockets
 from jsonrpcclient.clients.websockets_client import WebSocketsClient
 from jsonrpcserver import method
 
-from chainalytic.common import config, rpc_client
+from chainalytic.common import config, rpc_client, rpc_server
 from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
+from chainalytic.common.util import create_logger
 
 from . import Aggregator
 
 _AGGREGATOR = None
+
+_LOGGER = None
 
 
 @method
@@ -42,10 +45,10 @@ async def _call(call_id: str, **kwargs):
 
 
 async def initialize():
-    print('Initializing Aggregator service...')
+    _LOGGER.info('Initializing Aggregator service...')
     warehouse_endpoint = _AGGREGATOR.warehouse_endpoint
 
-    print('Waiting for Warehouse service...')
+    _LOGGER.info('Waiting for Warehouse service...')
     warehouse_response = await rpc_client.call_async(warehouse_endpoint, call_id='ping')
     while not warehouse_response['status']:
         warehouse_response = await rpc_client.call_async(warehouse_endpoint, call_id='ping')
@@ -68,9 +71,9 @@ async def initialize():
                     'transform_id': tid,
                 },
             )
-            print(f'--Set initial last_block_height for transform: {tid}')
-    print('Initialized Aggregator service')
-    print()
+            _LOGGER.info(f'--Set initial last_block_height for transform: {tid}')
+    _LOGGER.info('Initialized Aggregator service')
+    _LOGGER.info('')
 
 
 async def fetch_data():
@@ -78,14 +81,14 @@ async def fetch_data():
     warehouse_endpoint = _AGGREGATOR.warehouse_endpoint
 
     while 1:
-        print('New aggregation')
+        _LOGGER.info('New aggregation')
 
         t = time()
         for tid in _AGGREGATOR.kernel.transforms:
             t1 = time()
-            print(f'|Transform ID: {tid}')
-            print(f'|--Trying to fetch data...')
-            print(f'|----From Upstream: {upstream_endpoint}')
+            _LOGGER.info(f'Transform ID: {tid}')
+            _LOGGER.debug(f'--Trying to fetch data...')
+            _LOGGER.debug(f'----From Upstream: {upstream_endpoint}')
 
             warehouse_response = await rpc_client.call_async(
                 warehouse_endpoint,
@@ -93,7 +96,7 @@ async def fetch_data():
                 api_id='last_block_height',
                 api_params={'transform_id': tid},
             )
-            print(f'|----Last block height: {warehouse_response["data"]}')
+            _LOGGER.debug(f'----Last block height: {warehouse_response["data"]}')
 
             if warehouse_response['status'] and type(warehouse_response['data']) == int:
                 next_block_height = warehouse_response['data'] + 1
@@ -104,33 +107,37 @@ async def fetch_data():
                     transform_id=tid,
                 )
                 if upstream_response['status'] and upstream_response['data'] is not None:
-                    print(f'|--Fetched data successfully')
-                    print(f'|--Next block height: {next_block_height}')
-                    print(f'|--Preparing to execute next block...')
+                    _LOGGER.debug(f'--Fetched data successfully')
+                    _LOGGER.debug(f'--Next block height: {next_block_height}')
+                    _LOGGER.debug(f'--Preparing to execute next block...')
                     await _AGGREGATOR.kernel.execute(
                         height=next_block_height,
                         input_data=upstream_response['data'],
                         transform_id=tid,
                     )
-                    print(f'|--Executed block "{next_block_height}" successfully')
+                    _LOGGER.debug(f'--Executed block {next_block_height} successfully')
                 else:
-                    print(f'|--Failed to fetch, trying again...')
+                    _LOGGER.debug(f'--Failed to fetch, trying again...')
             agg_time = round(time() - t1, 4)
-            print(f'|Aggregation time: {agg_time}s')
+            _LOGGER.info(f'--Aggregated block {next_block_height} in {agg_time}s')
 
-        print('|')
+        _LOGGER.debug('----')
         tagg_time = round(time() - t, 4)
-        print(f'|Total aggregation time: {tagg_time}s')
-        print(f'|Estimated aggregation speed: {int(1/tagg_time)} blocks/s')
-        print('')
-        print('')
+        _LOGGER.debug(f'Total aggregation time: {tagg_time}s')
+        _LOGGER.debug(f'Estimated aggregation speed: {int(1/tagg_time)} blocks/s')
+        _LOGGER.info('')
+        _LOGGER.info('')
 
 
 def _run_server(endpoint, working_dir, zone_id):
     global _AGGREGATOR
+    global _LOGGER
+    _LOGGER = create_logger('aggregator', zone_id)
+    rpc_server.set_logger(_LOGGER)
+
     _AGGREGATOR = Aggregator(working_dir, zone_id)
-    print(f'Aggregator endpoint: {endpoint}')
-    print(f'Aggregator zone ID: {zone_id}')
+    _LOGGER.info(f'Aggregator endpoint: {endpoint}')
+    _LOGGER.info(f'Aggregator zone ID: {zone_id}')
 
     host = endpoint.split(':')[0]
     port = int(endpoint.split(':')[1])
@@ -138,10 +145,10 @@ def _run_server(endpoint, working_dir, zone_id):
     asyncio.get_event_loop().run_until_complete(initialize())
     asyncio.get_event_loop().create_task(fetch_data())
 
-    start_server = websockets.serve(main_dispatcher, host, port)
+    start_server = websockets.serve(main_dispatcher, host, port, max_size=2**32)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
-    print('Exited Aggregator')
+    _LOGGER.info('Exited Aggregator')
 
 
 if __name__ == "__main__":

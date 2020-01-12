@@ -21,6 +21,8 @@ class Provider(object):
         super(Provider, self).__init__()
         self.working_dir = working_dir
         self.zone_id = zone_id
+
+        config.set_working_dir(working_dir)
         self.setting = config.get_setting(working_dir)
         self.chain_registry = config.get_chain_registry(working_dir)
 

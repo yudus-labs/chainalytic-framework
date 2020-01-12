@@ -13,11 +13,14 @@ import time
 import websockets
 from jsonrpcserver import method
 
+from chainalytic.common import rpc_server
 from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
+from chainalytic.common.util import create_logger
 
 from . import Upstream
 
 _UPSTREAM = None
+_LOGGER = None
 
 
 @method
@@ -51,16 +54,20 @@ async def _call(call_id: str, **kwargs):
 
 def _run_server(endpoint, working_dir, zone_id):
     global _UPSTREAM
+    global _LOGGER
+    _LOGGER = create_logger('upstream', zone_id)
+    rpc_server.set_logger(_LOGGER)
+
     _UPSTREAM = Upstream(working_dir, zone_id)
-    print(f'Upstream endpoint: {endpoint}')
-    print(f'Upstream zone ID: {zone_id}')
+    _LOGGER.info(f'Upstream endpoint: {endpoint}')
+    _LOGGER.info(f'Upstream zone ID: {zone_id}')
 
     host = endpoint.split(':')[0]
     port = int(endpoint.split(':')[1])
-    start_server = websockets.serve(main_dispatcher, host, port)
+    start_server = websockets.serve(main_dispatcher, host, port, max_size=2 ** 32)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
-    print('Exited Upstream')
+    _LOGGER.info('Exited Upstream')
 
 
 if __name__ == "__main__":

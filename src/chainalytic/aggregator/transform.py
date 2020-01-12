@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 import plyvel
 
 from chainalytic.common import config
+from chainalytic.common.util import get_child_logger
 
 
 class BaseTransform(object):
@@ -48,6 +49,8 @@ class BaseTransform(object):
 
         Path(self.transform_cache_dir).parent.mkdir(parents=1, exist_ok=1)
         self.transform_cache_db = plyvel.DB(self.transform_cache_dir, create_if_missing=True)
+
+        self.logger = get_child_logger('aggregator.transform')
 
     def set_kernel(self, kernel: 'Kernel'):
         self.kernel = kernel

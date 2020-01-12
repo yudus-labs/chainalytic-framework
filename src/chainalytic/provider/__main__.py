@@ -9,11 +9,14 @@ from aiohttp import web
 from jsonrpcserver import async_dispatch as dispatch
 from jsonrpcserver import method
 
+from chainalytic.common import rpc_server
 from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
+from chainalytic.common.util import create_logger
 
 from . import Provider
 
 _PROVIDER = None
+_LOGGER = None
 
 
 @method
@@ -34,7 +37,7 @@ async def _call(call_id: str, **kwargs):
     elif call_id == 'get_zone_id':
         return _PROVIDER.zone_id
     elif call_id == 'exit':
-        print('Service is terminated')
+        _LOGGER.info('Service is terminated')
         sys.exit()
         return EXIT_SERVICE
     elif call_id == 'api_call':
@@ -49,22 +52,26 @@ async def _call(call_id: str, **kwargs):
 # def _run_server(endpoint, working_dir, zone_id):
 #     global _PROVIDER
 #     _PROVIDER = Provider(working_dir, zone_id)
-#     print(f'Provider endpoint: {endpoint}')
-#     print(f'Provider zone ID: {zone_id}')
+#     _LOGGER.info(f'Provider endpoint: {endpoint}')
+#     _LOGGER.info(f'Provider zone ID: {zone_id}')
 
 #     host = endpoint.split(':')[0]
 #     port = int(endpoint.split(':')[1])
 #     start_server = websockets.serve(main_dispatcher, host, port)
 #     asyncio.get_event_loop().run_until_complete(start_server)
 #     asyncio.get_event_loop().run_forever()
-#     print('Initialized Provider')
+#     _LOGGER.info('Initialized Provider')
 
 # aiohttp transfer protocol
 def _run_server(endpoint, working_dir, zone_id):
     global _PROVIDER
+    global _LOGGER
+    _LOGGER = create_logger('provider', zone_id)
+    rpc_server.set_logger(_LOGGER)
+
     _PROVIDER = Provider(working_dir, zone_id)
-    print(f'Provider endpoint: {endpoint}')
-    print(f'Provider zone ID: {zone_id}')
+    _LOGGER.info(f'Provider endpoint: {endpoint}')
+    _LOGGER.info(f'Provider zone ID: {zone_id}')
 
     host = endpoint.split(':')[0]
     port = int(endpoint.split(':')[1])
@@ -81,7 +88,7 @@ def _run_server(endpoint, working_dir, zone_id):
     app.router.add_post("/", handle)
     web.run_app(app, port=port)
 
-    print('Exited Provider')
+    _LOGGER.info('Exited Provider')
 
 
 if __name__ == "__main__":

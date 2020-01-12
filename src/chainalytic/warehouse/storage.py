@@ -6,6 +6,7 @@ from typing import Any, Collection, Dict, List, Optional, Set, Tuple, Union
 import plyvel
 
 from chainalytic.common import config, zone_manager
+from chainalytic.common.util import get_child_logger
 
 
 class BaseStorage(object):
@@ -56,6 +57,8 @@ class BaseStorage(object):
             for tid in transforms
         }
 
+        self.logger = get_child_logger('warehouse.storage')
+
     async def api_call(self, api_id: str, api_params: dict) -> Optional[Any]:
         func = getattr(self, api_id) if hasattr(self, api_id) else None
 
@@ -63,8 +66,8 @@ class BaseStorage(object):
             try:
                 return await func(api_params)
             except Exception as e:
-                print(f'{str(e)} \n {traceback.format_exc()}')
+                self.logger.error(f'{str(e)} \n {traceback.format_exc()}')
                 return None
         else:
-            print(f'Storage API not implemented: {api_id}')
+            self.logger.error(f'Storage API not implemented: {api_id}')
             return None

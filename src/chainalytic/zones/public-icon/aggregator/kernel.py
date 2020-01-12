@@ -11,7 +11,13 @@ class Kernel(BaseKernel):
     async def execute(self, height: int, input_data: Any, transform_id: str) -> Optional[bool]:
         """Execute transform and push output data to warehouse
         """
-        output = await self.transforms[transform_id].execute(height, input_data)
+        output = None
+        if transform_id in self.transforms:
+            try:
+                output = await self.transforms[transform_id].execute(height, input_data)
+            except Exception as e:
+                self.logger.error(f'ERROR while executing transform {transform_id}')
+                self.logger.error(str(e))
         if not output:
             return 0
 

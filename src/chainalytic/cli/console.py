@@ -151,7 +151,7 @@ class Console(object):
             self.stop_services()
 
         print('Initializing Chainalytic services...')
-        print()
+        print('')
         python_exe = sys.executable
 
         if service_id:
@@ -190,11 +190,11 @@ class Console(object):
                     start_new_session=True,
                 )
                 print(f'----Started {self.sid[i]["name"]} service: {" ".join(cmd)}')
-                print()
+                print('')
 
         if not all_sid:
             print('No service initialized')
-        print()
+        print('')
 
     def monitor_stake_history(
         self,

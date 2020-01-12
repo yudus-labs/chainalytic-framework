@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from chainalytic.common import config, zone_manager
+from chainalytic.common.util import get_child_logger
 
 
 class BaseCollator(object):
@@ -23,3 +24,4 @@ class BaseCollator(object):
         self.zone_id = zone_id
         self.warehouse_endpoint = config.get_setting(working_dir)['warehouse_endpoint']
 
+        self.logger = get_child_logger('provider.collator')
