@@ -1,4 +1,5 @@
 import curses
+import functools
 import json
 import os
 import subprocess
@@ -21,6 +22,19 @@ def seconds_to_datetime(seconds: int):
     sec = timedelta(seconds=seconds)
     d = datetime(1, 1, 1) + sec
     return f'{d.day - 1}d {d.hour}h {d.minute}m {d.second}s'
+
+
+def handle_curses_break(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        finally:
+            curses.echo()
+            curses.nocbreak()
+            curses.endwin()
+
+    return wrapper
 
 
 class Console(object):
@@ -196,6 +210,7 @@ class Console(object):
             print('No service initialized')
         print('')
 
+    @handle_curses_break
     def monitor_stake_history(
         self,
         zone_id: str,
@@ -204,107 +219,100 @@ class Console(object):
         stdscr: '_curses.window',
         refresh_time: float,
     ):
-        try:
-            latest_block_height = 0
-            prev_last_block = 0
+
+        latest_block_height = 0
+        prev_last_block = 0
+        prev_time = time.time()
+
+        last_block = 0
+        total_staking = 0
+        total_unstaking = 0
+        total_staking_wallets = 0
+        total_unstaking_wallets = 0
+
+        while 1:
+            upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')['status']
+            aggregator_connected = rpc_client.call(self.aggregator_endpoint, call_id='ping')[
+                'status'
+            ]
+            warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')['status']
+            provider_connected = provider_client.request("_call", call_id='ping').data.result
+
+            if upstream_connected:
+                upstream_response = rpc_client.call(
+                    self.upstream_endpoint, call_id='last_block_height'
+                )
+                if upstream_response['status']:
+                    latest_block_height = upstream_response['data']
+
+            if (
+                upstream_connected
+                and aggregator_connected
+                and warehouse_connected
+                and provider_connected
+            ):
+                r = provider_client.request(
+                    "_call",
+                    call_id='api_call',
+                    api_id='get_staking_info_last_block',
+                    api_params={'transform_id': transform_id},
+                ).data.result['result']
+                if r:
+                    last_block = r['height']
+                    total_staking = round(r['total_staking'], 2)
+                    total_unstaking = round(r['total_unstaking'], 2)
+                    total_staking_wallets = round(r['total_staking_wallets'], 2)
+                    total_unstaking_wallets = round(r['total_unstaking_wallets'], 2)
+
+            speed = int((last_block - prev_last_block) / (time.time() - prev_time))
+            prev_last_block = last_block
             prev_time = time.time()
 
-            last_block = 0
-            total_staking = 0
-            total_unstaking = 0
-            total_staking_wallets = 0
-            total_unstaking_wallets = 0
-
-            while 1:
-                upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')[
-                    'status'
-                ]
-                aggregator_connected = rpc_client.call(self.aggregator_endpoint, call_id='ping')[
-                    'status'
-                ]
-                warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')[
-                    'status'
-                ]
-                provider_connected = provider_client.request("_call", call_id='ping').data.result
-
-                if upstream_connected:
-                    upstream_response = rpc_client.call(
-                        self.upstream_endpoint, call_id='last_block_height'
-                    )
-                    if upstream_response['status']:
-                        latest_block_height = upstream_response['data']
-
-                if (
-                    upstream_connected
-                    and aggregator_connected
-                    and warehouse_connected
-                    and provider_connected
-                ):
-                    r = provider_client.request(
-                        "_call",
-                        call_id='api_call',
-                        api_id='get_staking_info_last_block',
-                        api_params={'transform_id': transform_id},
-                    ).data.result['result']
-                    if r:
-                        last_block = r['height']
-                        total_staking = round(r['total_staking'], 2)
-                        total_unstaking = round(r['total_unstaking'], 2)
-                        total_staking_wallets = round(r['total_staking_wallets'], 2)
-                        total_unstaking_wallets = round(r['total_unstaking_wallets'], 2)
-
-                speed = int((last_block - prev_last_block) / (time.time() - prev_time))
-                prev_last_block = last_block
-                prev_time = time.time()
-
-                if latest_block_height > last_block > 0 and speed > 0:
-                    remaining_time = seconds_to_datetime((latest_block_height - last_block) / speed)
-                elif latest_block_height == last_block and last_block > 0:
-                    remaining_time = 'Fully synced'
-                elif latest_block_height < last_block:
-                    remaining_time = (
-                        'Upstream block height is lower than latest aggregated block (out-of-date)'
-                    )
-                else:
-                    remaining_time = 'N/A'
-
-                remaining_blocks = abs(latest_block_height - last_block)
-
-                c1 = C if upstream_connected else D
-                c2 = C if aggregator_connected else D
-                c3 = C if warehouse_connected else D
-                c4 = C if provider_connected else D
-
-                stdscr.erase()
-                stdscr.addstr(
-                    0,
-                    0,
-                    f'== Data Aggregation Monitor | Zone ID: {zone_id} | Transform ID: {transform_id} ==',
+            if latest_block_height > last_block > 0 and speed > 0:
+                remaining_time = seconds_to_datetime((latest_block_height - last_block) / speed)
+            elif latest_block_height == last_block and last_block > 0:
+                remaining_time = 'Fully synced'
+            elif latest_block_height < last_block:
+                remaining_time = (
+                    'Upstream block height is lower than latest aggregated block (out-of-date)'
                 )
-                stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
-                stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
-                stdscr.addstr(3, 0, f'Warehouse service:  {self.warehouse_endpoint} {c3}')
-                stdscr.addstr(4, 0, f'Provider service:   {self.provider_endpoint} {c4}')
-                stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
-                stdscr.addstr(6, 0, f'----')
-                stdscr.addstr(7, 0, f'Latest upstream block:    {latest_block_height:,}')
-                stdscr.addstr(8, 0, f'Latest aggregated block:  {last_block:,}')
-                stdscr.addstr(9, 0, f'Data aggregation speed:   {speed} blocks/s')
-                stdscr.addstr(10, 0, f'Remaining blocks:         {remaining_blocks:,}')
-                stdscr.addstr(11, 0, f'Estimated time remaining: {remaining_time}')
-                stdscr.addstr(12, 0, f'----')
-                stdscr.addstr(13, 0, f'Total staking:           {total_staking:,}')
-                stdscr.addstr(14, 0, f'Total unstaking:         {total_unstaking:,}')
-                stdscr.addstr(15, 0, f'Total staking wallets:   {total_staking_wallets:,}')
-                stdscr.addstr(16, 0, f'Total unstaking wallets: {total_unstaking_wallets:,}')
-                stdscr.refresh()
+            else:
+                remaining_time = 'N/A'
 
-                time.sleep(refresh_time)
-        finally:
-            curses.echo()
-            curses.nocbreak()
-            curses.endwin()
+            remaining_blocks = abs(latest_block_height - last_block)
 
+            c1 = C if upstream_connected else D
+            c2 = C if aggregator_connected else D
+            c3 = C if warehouse_connected else D
+            c4 = C if provider_connected else D
+
+            stdscr.erase()
+            stdscr.addstr(
+                0,
+                0,
+                f'== Data Aggregation Monitor | Zone ID: {zone_id} | Transform ID: {transform_id} ==',
+            )
+            stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
+            stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
+            stdscr.addstr(3, 0, f'Warehouse service:  {self.warehouse_endpoint} {c3}')
+            stdscr.addstr(4, 0, f'Provider service:   {self.provider_endpoint} {c4}')
+            stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
+            stdscr.addstr(6, 0, f'----')
+            stdscr.addstr(7, 0, f'Latest upstream block:    {latest_block_height:,}')
+            stdscr.addstr(8, 0, f'Latest aggregated block:  {last_block:,}')
+            stdscr.addstr(9, 0, f'Data aggregation speed:   {speed} blocks/s')
+            stdscr.addstr(10, 0, f'Remaining blocks:         {remaining_blocks:,}')
+            stdscr.addstr(11, 0, f'Estimated time remaining: {remaining_time}')
+            stdscr.addstr(12, 0, f'----')
+            stdscr.addstr(13, 0, f'Total staking:           {total_staking:,}')
+            stdscr.addstr(14, 0, f'Total unstaking:         {total_unstaking:,}')
+            stdscr.addstr(15, 0, f'Total staking wallets:   {total_staking_wallets:,}')
+            stdscr.addstr(16, 0, f'Total unstaking wallets: {total_unstaking_wallets:,}')
+            stdscr.refresh()
+
+            time.sleep(refresh_time)
+
+    @handle_curses_break
     def monitor_basic(
         self,
         zone_id: str,
@@ -313,95 +321,166 @@ class Console(object):
         stdscr: '_curses.window',
         refresh_time: float,
     ):
-        try:
-            latest_block_height = 0
-            prev_last_block = 0
+
+        latest_block_height = 0
+        prev_last_block = 0
+        prev_time = time.time()
+
+        last_block = 0
+
+        while 1:
+            upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')['status']
+            aggregator_connected = rpc_client.call(self.aggregator_endpoint, call_id='ping')[
+                'status'
+            ]
+            warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')['status']
+            provider_connected = provider_client.request("_call", call_id='ping').data.result
+
+            if upstream_connected:
+                upstream_response = rpc_client.call(
+                    self.upstream_endpoint, call_id='last_block_height'
+                )
+                if upstream_response['status']:
+                    latest_block_height = upstream_response['data']
+
+            if (
+                upstream_connected
+                and aggregator_connected
+                and warehouse_connected
+                and provider_connected
+            ):
+                r = provider_client.request(
+                    "_call",
+                    call_id='api_call',
+                    api_id='last_block_height',
+                    api_params={'transform_id': transform_id},
+                ).data.result['result']
+                if r:
+                    last_block = r
+
+            speed = int((last_block - prev_last_block) / (time.time() - prev_time))
+            prev_last_block = last_block
             prev_time = time.time()
 
-            last_block = 0
+            if latest_block_height > last_block > 0 and speed > 0:
+                remaining_time = seconds_to_datetime((latest_block_height - last_block) / speed)
+            elif latest_block_height == last_block and last_block > 0:
+                remaining_time = 'Fully synced'
+            elif latest_block_height < last_block:
+                remaining_time = (
+                    'Upstream block height is lower than latest aggregated block (out-of-date)'
+                )
+            else:
+                remaining_time = 'N/A'
 
-            while 1:
-                upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')[
-                    'status'
-                ]
-                aggregator_connected = rpc_client.call(self.aggregator_endpoint, call_id='ping')[
-                    'status'
-                ]
-                warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')[
-                    'status'
-                ]
-                provider_connected = provider_client.request("_call", call_id='ping').data.result
+            remaining_blocks = abs(latest_block_height - last_block)
 
-                if upstream_connected:
-                    upstream_response = rpc_client.call(
-                        self.upstream_endpoint, call_id='last_block_height'
-                    )
-                    if upstream_response['status']:
-                        latest_block_height = upstream_response['data']
+            c1 = C if upstream_connected else D
+            c2 = C if aggregator_connected else D
+            c3 = C if warehouse_connected else D
+            c4 = C if provider_connected else D
 
-                if (
-                    upstream_connected
-                    and aggregator_connected
-                    and warehouse_connected
-                    and provider_connected
-                ):
-                    r = provider_client.request(
+            stdscr.erase()
+            stdscr.addstr(
+                0,
+                0,
+                f'== Data Aggregation Monitor | Zone ID: {zone_id} | Transform ID: {transform_id} ==',
+            )
+            stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
+            stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
+            stdscr.addstr(3, 0, f'Warehouse service:  {self.warehouse_endpoint} {c3}')
+            stdscr.addstr(4, 0, f'Provider service:   {self.provider_endpoint} {c4}')
+            stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
+            stdscr.addstr(6, 0, f'----')
+            stdscr.addstr(7, 0, f'Latest upstream block:    {latest_block_height:,}')
+            stdscr.addstr(8, 0, f'Latest aggregated block:  {last_block:,}')
+            stdscr.addstr(9, 0, f'Data aggregation speed:   {speed} blocks/s')
+            stdscr.addstr(10, 0, f'Remaining blocks:         {remaining_blocks:,}')
+            stdscr.addstr(11, 0, f'Estimated time remaining: {remaining_time}')
+            stdscr.refresh()
+
+            time.sleep(refresh_time)
+
+    @handle_curses_break
+    def monitor_all(
+        self,
+        zone_id: str,
+        all_transform_ids: list,
+        provider_client: HTTPClient,
+        stdscr: '_curses.window',
+        refresh_time: float,
+    ):
+        all_transforms_last_block = {tid: 0 for tid in all_transform_ids}
+        all_transforms_prev_last_block = {tid: 0 for tid in all_transform_ids}
+        all_transforms_prev_time = {tid: 0 for tid in all_transform_ids}
+        all_transforms_speed = {tid: 0 for tid in all_transform_ids}
+
+        while 1:
+            upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')['status']
+            aggregator_connected = rpc_client.call(self.aggregator_endpoint, call_id='ping')[
+                'status'
+            ]
+            warehouse_connected = rpc_client.call(self.warehouse_endpoint, call_id='ping')['status']
+            provider_connected = provider_client.request("_call", call_id='ping').data.result
+
+            if upstream_connected:
+                upstream_response = rpc_client.call(
+                    self.upstream_endpoint, call_id='last_block_height'
+                )
+                if upstream_response['status']:
+                    latest_block_height = upstream_response['data']
+
+            if (
+                upstream_connected
+                and aggregator_connected
+                and warehouse_connected
+                and provider_connected
+            ):
+                for tid in all_transform_ids:
+                    last_block = provider_client.request(
                         "_call",
                         call_id='api_call',
                         api_id='last_block_height',
-                        api_params={'transform_id': transform_id},
+                        api_params={'transform_id': tid},
                     ).data.result['result']
-                    if r:
-                        last_block = r
+                    if last_block:
+                        all_transforms_prev_last_block[tid] = all_transforms_last_block[tid]
+                        all_transforms_last_block[tid] = last_block
+                        all_transforms_speed[tid] = int(
+                            (last_block - all_transforms_prev_last_block[tid])
+                            / (time.time() - all_transforms_prev_time[tid])
+                        )
+                        all_transforms_prev_time[tid] = time.time()
 
-                speed = int((last_block - prev_last_block) / (time.time() - prev_time))
-                prev_last_block = last_block
-                prev_time = time.time()
+            c1 = C if upstream_connected else D
+            c2 = C if aggregator_connected else D
+            c3 = C if warehouse_connected else D
+            c4 = C if provider_connected else D
 
-                if latest_block_height > last_block > 0 and speed > 0:
-                    remaining_time = seconds_to_datetime((latest_block_height - last_block) / speed)
-                elif latest_block_height == last_block and last_block > 0:
-                    remaining_time = 'Fully synced'
-                elif latest_block_height < last_block:
-                    remaining_time = (
-                        'Upstream block height is lower than latest aggregated block (out-of-date)'
-                    )
-                else:
-                    remaining_time = 'N/A'
-
-                remaining_blocks = abs(latest_block_height - last_block)
-
-                c1 = C if upstream_connected else D
-                c2 = C if aggregator_connected else D
-                c3 = C if warehouse_connected else D
-                c4 = C if provider_connected else D
-
-                stdscr.erase()
+            stdscr.erase()
+            stdscr.addstr(
+                0, 0, f'== Data Aggregation Monitor | Zone ID: {zone_id} | All Transforms ==',
+            )
+            stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
+            stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
+            stdscr.addstr(3, 0, f'Warehouse service:  {self.warehouse_endpoint} {c3}')
+            stdscr.addstr(4, 0, f'Provider service:   {self.provider_endpoint} {c4}')
+            stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
+            stdscr.addstr(6, 0, f'----')
+            stdscr.addstr(7, 0, f'Latest upstream block:  {latest_block_height:,}')
+            stdscr.addstr(8, 0, f'Latest aggregated block of all transforms')
+            for i, tid in enumerate(all_transforms_last_block):
                 stdscr.addstr(
+                    9 + i,
                     0,
-                    0,
-                    f'== Data Aggregation Monitor | Zone ID: {zone_id} | Transform ID: {transform_id} ==',
+                    f'----{tid}:  {all_transforms_last_block[tid]:,} | {all_transforms_speed[tid]} blocks/s',
                 )
-                stdscr.addstr(1, 0, f'Upstream service:   {self.upstream_endpoint} {c1}')
-                stdscr.addstr(2, 0, f'Aggregator service: {self.aggregator_endpoint} {c2}')
-                stdscr.addstr(3, 0, f'Warehouse service:  {self.warehouse_endpoint} {c3}')
-                stdscr.addstr(4, 0, f'Provider service:   {self.provider_endpoint} {c4}')
-                stdscr.addstr(5, 0, f'Working dir: {self.working_dir}')
-                stdscr.addstr(6, 0, f'----')
-                stdscr.addstr(7, 0, f'Latest upstream block:    {latest_block_height:,}')
-                stdscr.addstr(8, 0, f'Latest aggregated block:  {last_block:,}')
-                stdscr.addstr(9, 0, f'Data aggregation speed:   {speed} blocks/s')
-                stdscr.addstr(10, 0, f'Remaining blocks:         {remaining_blocks:,}')
-                stdscr.addstr(11, 0, f'Estimated time remaining: {remaining_time}')
-                stdscr.refresh()
 
-                time.sleep(refresh_time)
-        finally:
-            curses.echo()
-            curses.nocbreak()
-            curses.endwin()
+            stdscr.refresh()
 
-    def monitor(self, transform_id: str, refresh_time: float = 1.0):
+            time.sleep(refresh_time)
+
+    def monitor(self, transform_id: Optional[str], refresh_time: float = 1.0):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
         print('Starting aggregation monitor, waiting for Provider and Aggregator service...')
@@ -429,7 +508,9 @@ class Console(object):
             print('Cannot query official transform IDs, exited console')
             return
 
-        if transform_id == 'stake_history' and transform_id in all_transforms:
+        if not transform_id:
+            self.monitor_all(zone_id, all_transforms, provider_client, stdscr, refresh_time)
+        elif transform_id == 'stake_history' and transform_id in all_transforms:
             self.monitor_stake_history(zone_id, transform_id, provider_client, stdscr, refresh_time)
         elif transform_id in all_transforms:
             self.monitor_basic(zone_id, transform_id, provider_client, stdscr, refresh_time)

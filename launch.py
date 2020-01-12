@@ -24,12 +24,12 @@ if __name__ == '__main__':
     stop_parser.add_argument(
         'sid', nargs='?', default=None, help='Service ID, kill specific service'
     )
-    monitor_parser = subparsers.add_parser('m', help='Monitor one specific transform')
+    monitor_parser = subparsers.add_parser('m', help='Monitor all or some specific transform')
     monitor_parser.add_argument(
         'transform_id',
         nargs='?',
-        default='stake_history',
-        help='Transform ID. Default is "stake_history"',
+        default=None,
+        help='Transform ID. Skip to monitor all transforms',
     )
     monitor_parser.add_argument('-r', '--refresh-time', help='Refresh time of aggregation monitor')
 
