@@ -231,3 +231,26 @@ _Return_
     }
 }
 ----
+
+#### funded_wallets
+
+Latest sorted list of wallets that hold a minimum amount of ICX
+
+_Params_
+[source]
+----
+"api_id": "funded_wallets"
+
+"api_params": {"min_balance": <MIN_BALANCE: float>}
+----
+_Return_
+[source]
+----
+{
+    'height': int,
+    'wallets': {
+        <ADDRESS: str>: <BALANCE: float>,
+        ...
+    }
+}
+----
