@@ -12,9 +12,13 @@ ZONE_MODULES = {
 }
 
 
-def load_zone(zone_id: str) -> Dict[str, Dict]:
+def load_zone(zone_id: str, working_dir: str) -> Dict[str, Dict]:
     """Load service-modules of a specific zone
     """
+    zone = get_zone(working_dir, zone_id)
+    zone = zone if zone else {}
+    transforms = zone['transforms'] if 'transforms' in zone else []
+
     ret = {
         'upstream': {'data_feeder': None},
         'aggregator': {'kernel': None, 'transform_registry': {}},
@@ -32,13 +36,14 @@ def load_zone(zone_id: str) -> Dict[str, Dict]:
             ret[service][mod] = module
             spec.loader.exec_module(module)
 
-    for p in zone_implementation_dir.joinpath('aggregator', 'transform_registry').glob(
-        '[!^__]*.py'
-    ):
+    for p in zone_implementation_dir.joinpath('aggregator', 'transform_registry').glob('[!^_]*.py'):
+        if p.stem not in transforms and transforms:
+            continue
         spec = importlib.util.spec_from_file_location(p.name, p.as_posix())
         module = importlib.util.module_from_spec(spec)
         ret['aggregator']['transform_registry'][p.stem] = module
         spec.loader.exec_module(module)
+
     return ret
 
 

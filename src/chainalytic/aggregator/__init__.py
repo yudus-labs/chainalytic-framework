@@ -25,7 +25,7 @@ class Aggregator(object):
         self.setting = config.get_setting(working_dir)
         self.chain_registry = config.get_chain_registry(working_dir)
 
-        mods = zone_manager.load_zone(self.zone_id)['aggregator']
+        mods = zone_manager.load_zone(self.zone_id, working_dir)['aggregator']
         self.kernel = mods['kernel'].Kernel(working_dir, zone_id)
 
         for transform_id in mods['transform_registry']:

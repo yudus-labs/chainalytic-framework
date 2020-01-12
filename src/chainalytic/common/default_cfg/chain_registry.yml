@@ -5,6 +5,12 @@ zones:
     chain_db_dir: ''
     score_db_icondex_dir: ''
     direct_db_access: 0
+    transforms:
+      - stake_history
+      - stake_top100
+      - recent_stake_wallets
+      - abstention_stake
+      - funded_wallets
   - zone_id: 'public-ethereum'
     zone_name: 'Public Ethereum mainnet'
     client_endpoint: ''

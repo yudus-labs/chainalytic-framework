@@ -23,5 +23,5 @@ class Warehouse(object):
         self.setting = config.get_setting(working_dir)
         self.chain_registry = config.get_chain_registry(working_dir)
 
-        mods = zone_manager.load_zone(self.zone_id)['warehouse']
+        mods = zone_manager.load_zone(self.zone_id, working_dir)['warehouse']
         self.storage = mods['storage'].Storage(working_dir, zone_id)

@@ -22,5 +22,5 @@ class Upstream(object):
         self.setting = config.get_setting(working_dir)
         self.chain_registry = config.get_chain_registry(working_dir)
 
-        mods = zone_manager.load_zone(self.zone_id)['upstream']
+        mods = zone_manager.load_zone(self.zone_id, working_dir)['upstream']
         self.data_feeder = mods['data_feeder'].DataFeeder(working_dir, zone_id)

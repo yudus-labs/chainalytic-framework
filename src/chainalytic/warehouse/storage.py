@@ -38,7 +38,9 @@ class BaseStorage(object):
             warehouse_dir=self.warehouse_dir, zone_id=zone_id,
         )
 
-        transforms = zone_manager.load_zone(zone_id)['aggregator']['transform_registry']
+        transforms = zone_manager.load_zone(zone_id, working_dir)['aggregator'][
+            'transform_registry'
+        ]
         self.transform_storage_dirs = {
             tid: setting['transform_storage_dir'].format(
                 zone_storage_dir=self.zone_storage_dir, transform_id=tid
