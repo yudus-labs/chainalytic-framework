@@ -24,6 +24,8 @@ def unlock_period(total_stake, total_supply):
 
 
 class Transform(BaseTransform):
+    START_BLOCK_HEIGHT = FIRST_STAKE_BLOCK_HEIGHT = 7597365
+
     LAST_STATE_HEIGHT_KEY = b'last_state_height'
     LAST_TOTAL_STAKING_KEY = b'last_total_staking'
     LAST_TOTAL_UNSTAKING_KEY = b'last_total_unstaking'

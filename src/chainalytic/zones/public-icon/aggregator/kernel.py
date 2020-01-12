@@ -5,9 +5,6 @@ from chainalytic.common import config, rpc_client
 
 
 class Kernel(BaseKernel):
-    FIRST_STAKE_BLOCK_HEIGHT = 7597365
-    START_BLOCK_HEIGHT = FIRST_STAKE_BLOCK_HEIGHT - 1
-
     def __init__(self, working_dir: str, zone_id: str):
         super(Kernel, self).__init__(working_dir, zone_id)
 
@@ -68,6 +65,17 @@ class Kernel(BaseKernel):
                 api_id='set_abstention_stake',
                 api_params={
                     'abstention_stake': output['misc']['abstention_stake'],
+                    'transform_id': transform_id,
+                },
+            )
+            return r['status']
+        elif transform_id == 'funded_wallets':
+            r = await rpc_client.call_async(
+                self.warehouse_endpoint,
+                call_id='api_call',
+                api_id='update_funded_wallets',
+                api_params={
+                    'updated_wallets': output['misc']['updated_wallets'],
                     'transform_id': transform_id,
                 },
             )
