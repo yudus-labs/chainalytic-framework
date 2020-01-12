@@ -314,7 +314,7 @@ class Storage(BaseStorage):
         return 1
 
     async def funded_wallets(self, api_params: dict) -> dict:
-        min_balance = api_params['min_balance']
+        min_balance: float = api_params['min_balance']
         transform_id: str = api_params['transform_id']
 
         wallets = {}

@@ -37,18 +37,21 @@ class BaseKernel(object):
     async def execute(self, height: int, input_data: Any, transform_id: str) -> Optional[bool]:
         """Execute transform and push output data to warehouse
         """
+        output = None
         if transform_id in self.transforms:
             output = await self.transforms[transform_id].execute(height, input_data)
-            if not output:
-                return 0
-            r = await rpc_client.call_async(
-                self.warehouse_endpoint,
-                call_id='api_call',
-                api_id='put_block',
-                api_params={
-                    'height': output['height'],
-                    'data': output['data'],
-                    'transform_id': transform_id,
-                },
-            )
-            return r['status']
+        if not output:
+            return 0
+
+        # Sample
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='put_block',
+            api_params={
+                'height': output['height'],
+                'data': output['data'],
+                'transform_id': transform_id,
+            },
+        )
+        return r['status']

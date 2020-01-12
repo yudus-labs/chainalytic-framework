@@ -68,7 +68,6 @@ class DataFeeder(BaseDataFeeder):
             block_hash = self.chain_db.get(heightkey)
 
             if not block_hash:
-                self.logger.info('Block hash not found')
                 return None
 
             data = self.chain_db.get(block_hash)
@@ -86,15 +85,13 @@ class DataFeeder(BaseDataFeeder):
     def _get_last_block(self):
         return self.icon_service.get_block('latest')['height']
 
-    async def _get_block_fund_transfer_tx(self, height: int, verbose: bool = 0) -> Optional[dict]:
+    async def _get_block_fund_transfer_tx(self, height: int) -> Optional[dict]:
         """Filter out and process ICX transfering txs."""
-        if verbose:
-            self.logger.info(f'Feeding block: {height}')
+        self.logger.debug(f'Feeding block: {height}')
 
         block = self._get_block(height)
         if not block:
-            if verbose:
-                self.logger.info('--Block not found')
+            self.logger.warning(f'Block {height} not found')
             return None
 
         try:
@@ -106,10 +103,9 @@ class DataFeeder(BaseDataFeeder):
                 timestamp = int(block['timestamp'], 16)
 
         except Exception as e:
-            if verbose:
-                self.logger.info('ERROR in block data loading, skipped feeding')
-                self.logger.info(e)
-                self.logger.info(traceback.format_exc())
+            self.logger.error('ERROR in block data loading, skipped feeding')
+            self.logger.error(e)
+            self.logger.error(traceback.format_exc())
             return None
 
         try:
@@ -124,14 +120,12 @@ class DataFeeder(BaseDataFeeder):
                     tx_data['value'] = int(tx['value'], 16) / 10 ** 18
                     fund_transfer_txs.append(tx_data)
                 except ValueError:
-                    if verbose:
-                        self.logger.info(f'ERROR in fund transfer transaction: {tx}')
+                    self.logger.error(f'ERROR in fund transfer transaction: {tx}')
 
         except Exception as e:
-            if verbose:
-                self.logger.info('ERROR in data pre-processing')
-                self.logger.info(e)
-                self.logger.info(traceback.format_exc())
+            self.logger.error('ERROR in data pre-processing')
+            self.logger.error(e)
+            self.logger.error(traceback.format_exc())
             return None
 
         return {
@@ -139,15 +133,13 @@ class DataFeeder(BaseDataFeeder):
             'timestamp': timestamp,
         }
 
-    async def _get_block_stake_tx(self, height: int, verbose: bool = 0) -> Optional[dict]:
+    async def _get_block_stake_tx(self, height: int) -> Optional[dict]:
         """Filter out and process `setStake` txs."""
-        if verbose:
-            self.logger.info(f'Feeding block: {height}')
+        self.logger.debug(f'Feeding block: {height}')
 
         block = self._get_block(height)
         if not block:
-            if verbose:
-                self.logger.info('--Block not found')
+            self.logger.warning(f'Block {height} not found')
             return None
 
         try:
@@ -159,10 +151,9 @@ class DataFeeder(BaseDataFeeder):
                 timestamp = int(block['timestamp'], 16)
 
         except Exception as e:
-            if verbose:
-                self.logger.info('ERROR in block data loading, skipped feeding')
-                self.logger.info(e)
-                self.logger.info(traceback.format_exc())
+            self.logger.error('ERROR in block data loading, skipped feeding')
+            self.logger.error(e)
+            self.logger.error(traceback.format_exc())
             return None
 
         try:
@@ -177,14 +168,12 @@ class DataFeeder(BaseDataFeeder):
                         stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
                         set_stake_wallets[tx["from"]] = stake_value
                     except ValueError:
-                        if verbose:
-                            self.logger.info(f'ERROR in setStake transaction: {tx}')
+                        self.logger.error(f'ERROR in setStake transaction: {tx}')
 
         except Exception as e:
-            if verbose:
-                self.logger.info('ERROR in data pre-processing')
-                self.logger.info(e)
-                self.logger.info(traceback.format_exc())
+            self.logger.error('ERROR in data pre-processing')
+            self.logger.error(e)
+            self.logger.error(traceback.format_exc())
             return None
 
         return {
@@ -193,17 +182,13 @@ class DataFeeder(BaseDataFeeder):
             'total_supply': self._get_total_supply(),
         }
 
-    async def _get_block_stake_delegation_tx(
-        self, height: int, verbose: bool = 0
-    ) -> Optional[dict]:
+    async def _get_block_stake_delegation_tx(self, height: int) -> Optional[dict]:
         """Filter out and process `setStake` and `setDelegation` txs."""
-        if verbose:
-            self.logger.info(f'Feeding block: {height}')
+        self.logger.debug(f'Feeding block: {height}')
 
         block = self._get_block(height)
         if not block:
-            if verbose:
-                self.logger.info('--Block not found')
+            self.logger.warning(f'Block {height} not found')
             return None
 
         try:
@@ -215,10 +200,9 @@ class DataFeeder(BaseDataFeeder):
                 timestamp = int(block['timestamp'], 16)
 
         except Exception as e:
-            if verbose:
-                self.logger.info('ERROR in block data loading, skipped feeding')
-                self.logger.info(e)
-                self.logger.info(traceback.format_exc())
+            self.logger.error('ERROR in block data loading, skipped feeding')
+            self.logger.error(e)
+            self.logger.error(traceback.format_exc())
             return None
 
         try:
@@ -234,21 +218,18 @@ class DataFeeder(BaseDataFeeder):
                         stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
                         set_stake_wallets[tx["from"]] = stake_value
                     except ValueError:
-                        if verbose:
-                            self.logger.info(f'ERROR in setStake transaction: {tx}')
+                        self.logger.error(f'ERROR in setStake transaction: {tx}')
 
                 elif tx['data']['method'] == 'setDelegation':
                     try:
                         set_delegation_wallets[tx["from"]] = tx['data']['params']['delegations']
                     except KeyError:
-                        if verbose:
-                            self.logger.info(f'ERROR in setDelegation transaction: {tx}')
+                        self.logger.error(f'ERROR in setDelegation transaction: {tx}')
 
         except Exception as e:
-            if verbose:
-                self.logger.info('ERROR in data pre-processing')
-                self.logger.info(e)
-                self.logger.info(traceback.format_exc())
+            self.logger.error('ERROR in data pre-processing')
+            self.logger.error(e)
+            self.logger.error(traceback.format_exc())
             return None
 
         return {
@@ -257,17 +238,17 @@ class DataFeeder(BaseDataFeeder):
             'total_supply': self._get_total_supply(),
         }
 
-    async def get_block(self, height: int, transform_id: str, verbose: bool = 1) -> Optional[dict]:
+    async def get_block(self, height: int, transform_id: str) -> Optional[dict]:
         if transform_id == 'stake_history':
-            return await self._get_block_stake_tx(height, verbose)
+            return await self._get_block_stake_tx(height)
         elif transform_id == 'stake_top100':
-            return await self._get_block_stake_tx(height, verbose)
+            return await self._get_block_stake_tx(height)
         elif transform_id == 'recent_stake_wallets':
-            return await self._get_block_stake_tx(height, verbose)
+            return await self._get_block_stake_tx(height)
         elif transform_id == 'abstention_stake':
-            return await self._get_block_stake_delegation_tx(height, verbose)
+            return await self._get_block_stake_delegation_tx(height)
         elif transform_id == 'funded_wallets':
-            return await self._get_block_fund_transfer_tx(height, verbose)
+            return await self._get_block_fund_transfer_tx(height)
 
     async def last_block_height(self) -> Optional[int]:
         """Get last block height from chain

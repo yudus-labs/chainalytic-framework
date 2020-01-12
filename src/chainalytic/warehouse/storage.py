@@ -66,8 +66,8 @@ class BaseStorage(object):
             try:
                 return await func(api_params)
             except Exception as e:
-                self.logger.info(f'{str(e)} \n {traceback.format_exc()}')
+                self.logger.error(f'{str(e)} \n {traceback.format_exc()}')
                 return None
         else:
-            self.logger.info(f'Storage API not implemented: {api_id}')
+            self.logger.error(f'Storage API not implemented: {api_id}')
             return None

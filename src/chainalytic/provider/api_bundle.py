@@ -40,6 +40,7 @@ class BaseApiBundle(object):
 
         try:
             if func:
+                self.logger.debug(f'Found API: {api_id}, calling...')
                 ret['result'] = await func(api_params)
                 ret['status'] = 1
             else:

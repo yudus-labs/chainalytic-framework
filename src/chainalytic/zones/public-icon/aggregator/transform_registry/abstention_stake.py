@@ -83,7 +83,7 @@ class Transform(BaseTransform):
                 try:
                     delegation_val += int(t['value'], 16) / 10 ** 18
                 except Exception as e:
-                    self.logger.info(f'{e}\n{traceback.format_exc()}')
+                    self.logger.error(f'{e}\n{traceback.format_exc()}')
                     delegation_val = None
                     break
 

@@ -29,7 +29,7 @@ async def main_dispatcher(websocket, path):
 
 def show_call_info(call_id: str, params: dict):
     if _LOGGER:
-        _LOGGER.info(f'Call: {call_id}')
-        _LOGGER.info('Params:')
-        _LOGGER.info(util.pretty(params))
-        _LOGGER.info()
+        _LOGGER.debug(f'Call: {call_id}')
+        _LOGGER.debug('Params:')
+        _LOGGER.debug(util.pretty(params))
+        _LOGGER.debug('')

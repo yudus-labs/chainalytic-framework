@@ -69,7 +69,7 @@ def _run_server(endpoint, working_dir, zone_id):
 
     host = endpoint.split(':')[0]
     port = int(endpoint.split(':')[1])
-    start_server = websockets.serve(main_dispatcher, host, port)
+    start_server = websockets.serve(main_dispatcher, host, port, max_size=2 ** 32)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
     _LOGGER.info('Exited Warehouse')

@@ -15,6 +15,7 @@ rpc_client.call_aiohttp(
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from chainalytic.common import config
+from chainalytic.common import util
 from chainalytic.provider.api_bundle import BaseApiBundle
 
 

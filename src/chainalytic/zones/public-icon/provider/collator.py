@@ -55,6 +55,8 @@ class Collator(BaseCollator):
         if r['status']:
             return r['data']
         else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
             return None
 
     ####################################
@@ -70,6 +72,8 @@ class Collator(BaseCollator):
         if r['status']:
             return r['data']
         else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
             return None
 
     ###########################################
@@ -85,6 +89,8 @@ class Collator(BaseCollator):
         if r['status']:
             return r['data']
         else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
             return None
 
     #######################################
@@ -100,9 +106,11 @@ class Collator(BaseCollator):
         if r['status']:
             return r['data']
         else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
             return None
 
-    #######################################
+    #####################################
     # For `funded_wallets` transform only
     #
     async def funded_wallets(self, transform_id: str, min_balance: float) -> Optional[dict]:
@@ -115,4 +123,6 @@ class Collator(BaseCollator):
         if r['status']:
             return r['data']
         else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
             return None
