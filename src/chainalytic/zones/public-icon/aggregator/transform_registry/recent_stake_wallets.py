@@ -71,9 +71,9 @@ class Transform(BaseTransform):
                 )
             }
             if len(recent_stake_wallets) > Transform.MAX_WALLETS:
-                top_addresses = list(recent_stake_wallets)[: Transform.MAX_WALLETS]
                 recent_stake_wallets = {
-                    k: v for k, v in recent_stake_wallets.items() if k in top_addresses
+                    k: recent_stake_wallets[k]
+                    for k in list(recent_stake_wallets)[: Transform.MAX_WALLETS]
                 }
 
         cache_db_batch.put(b'recent_stake_wallets', json.dumps(recent_stake_wallets).encode())

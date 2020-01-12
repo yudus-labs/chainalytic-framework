@@ -321,7 +321,7 @@ class Storage(BaseStorage):
         wallets = {}
         db = self.transform_storage_dbs[transform_id]
         for addr, balance in db:
-            if addr.startswith(b'hx') and float(balance) >= min_balance:
+            if addr.startswith(b'hx') and float(balance) >= min_balance and float(balance) > 0:
                 wallets[addr.decode()] = float(balance)
 
         wallets = {k: v for k, v in sorted(wallets.items(), key=lambda item: item[1], reverse=1)}

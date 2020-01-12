@@ -12,7 +12,6 @@ from chainalytic.aggregator.transform import BaseTransform
 from chainalytic.common import rpc_client, trie
 
 
-
 class Transform(BaseTransform):
     START_BLOCK_HEIGHT = FIRST_STAKE_BLOCK_HEIGHT = 7597365
 
@@ -120,8 +119,9 @@ class Transform(BaseTransform):
                 )
             }
             if len(abstention_stake) > Transform.MAX_WALLETS:
-                top_addresses = list(abstention_stake)[: Transform.MAX_WALLETS]
-                abstention_stake = {k: v for k, v in abstention_stake.items() if k in top_addresses}
+                abstention_stake = {
+                    k: abstention_stake[k] for k in list(abstention_stake)[: Transform.MAX_WALLETS]
+                }
 
         cache_db_batch.put(b'abstention_stake', json.dumps(abstention_stake).encode())
         cache_db_batch.put(Transform.LAST_STATE_HEIGHT_KEY, str(height).encode())

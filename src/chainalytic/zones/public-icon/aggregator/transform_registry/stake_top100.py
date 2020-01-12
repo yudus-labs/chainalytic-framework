@@ -13,8 +13,8 @@ from chainalytic.common import rpc_client, trie
 
 class Transform(BaseTransform):
     START_BLOCK_HEIGHT = FIRST_STAKE_BLOCK_HEIGHT = 7597365
-
     LAST_STATE_HEIGHT_KEY = b'last_state_height'
+    MAX_WALLETS = 100
 
     def __init__(self, working_dir: str, zone_id: str, transform_id: str):
         super(Transform, self).__init__(working_dir, zone_id, transform_id)
@@ -59,9 +59,9 @@ class Transform(BaseTransform):
                     updated_stake_top100.items(), key=lambda item: item[1], reverse=1
                 )
             }
-            top100_addresses = list(updated_stake_top100)[:100]
             updated_stake_top100 = {
-                k: v for k, v in updated_stake_top100.items() if k in top100_addresses
+                k: updated_stake_top100[k]
+                for k in list(updated_stake_top100)[: Transform.MAX_WALLETS]
             }
             cache_db_batch.put(b'stake_top100', json.dumps(updated_stake_top100).encode())
         else:
