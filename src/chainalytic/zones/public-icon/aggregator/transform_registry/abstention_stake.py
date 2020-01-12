@@ -12,6 +12,7 @@ from chainalytic.aggregator.transform import BaseTransform
 from chainalytic.common import rpc_client, trie
 
 
+
 class Transform(BaseTransform):
     START_BLOCK_HEIGHT = FIRST_STAKE_BLOCK_HEIGHT = 7597365
 
@@ -82,7 +83,7 @@ class Transform(BaseTransform):
                 try:
                     delegation_val += int(t['value'], 16) / 10 ** 18
                 except Exception as e:
-                    print(f'{e}\n{traceback.format_exc()}')
+                    self.logger.info(f'{e}\n{traceback.format_exc()}')
                     delegation_val = None
                     break
 

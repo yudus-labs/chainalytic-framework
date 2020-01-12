@@ -68,7 +68,7 @@ class DataFeeder(BaseDataFeeder):
             block_hash = self.chain_db.get(heightkey)
 
             if not block_hash:
-                print('Block hash not found')
+                self.logger.info('Block hash not found')
                 return None
 
             data = self.chain_db.get(block_hash)
@@ -89,12 +89,12 @@ class DataFeeder(BaseDataFeeder):
     async def _get_block_fund_transfer_tx(self, height: int, verbose: bool = 0) -> Optional[dict]:
         """Filter out and process ICX transfering txs."""
         if verbose:
-            print(f'Feeding block: {height}')
+            self.logger.info(f'Feeding block: {height}')
 
         block = self._get_block(height)
         if not block:
             if verbose:
-                print('--Block not found')
+                self.logger.info('--Block not found')
             return None
 
         try:
@@ -107,9 +107,9 @@ class DataFeeder(BaseDataFeeder):
 
         except Exception as e:
             if verbose:
-                print('ERROR in block data loading, skipped feeding')
-                print(e)
-                print(traceback.format_exc())
+                self.logger.info('ERROR in block data loading, skipped feeding')
+                self.logger.info(e)
+                self.logger.info(traceback.format_exc())
             return None
 
         try:
@@ -125,13 +125,13 @@ class DataFeeder(BaseDataFeeder):
                     fund_transfer_txs.append(tx_data)
                 except ValueError:
                     if verbose:
-                        print(f'ERROR in fund transfer transaction: {tx}')
+                        self.logger.info(f'ERROR in fund transfer transaction: {tx}')
 
         except Exception as e:
             if verbose:
-                print('ERROR in data pre-processing')
-                print(e)
-                print(traceback.format_exc())
+                self.logger.info('ERROR in data pre-processing')
+                self.logger.info(e)
+                self.logger.info(traceback.format_exc())
             return None
 
         return {
@@ -142,12 +142,12 @@ class DataFeeder(BaseDataFeeder):
     async def _get_block_stake_tx(self, height: int, verbose: bool = 0) -> Optional[dict]:
         """Filter out and process `setStake` txs."""
         if verbose:
-            print(f'Feeding block: {height}')
+            self.logger.info(f'Feeding block: {height}')
 
         block = self._get_block(height)
         if not block:
             if verbose:
-                print('--Block not found')
+                self.logger.info('--Block not found')
             return None
 
         try:
@@ -160,9 +160,9 @@ class DataFeeder(BaseDataFeeder):
 
         except Exception as e:
             if verbose:
-                print('ERROR in block data loading, skipped feeding')
-                print(e)
-                print(traceback.format_exc())
+                self.logger.info('ERROR in block data loading, skipped feeding')
+                self.logger.info(e)
+                self.logger.info(traceback.format_exc())
             return None
 
         try:
@@ -178,13 +178,13 @@ class DataFeeder(BaseDataFeeder):
                         set_stake_wallets[tx["from"]] = stake_value
                     except ValueError:
                         if verbose:
-                            print(f'ERROR in setStake transaction: {tx}')
+                            self.logger.info(f'ERROR in setStake transaction: {tx}')
 
         except Exception as e:
             if verbose:
-                print('ERROR in data pre-processing')
-                print(e)
-                print(traceback.format_exc())
+                self.logger.info('ERROR in data pre-processing')
+                self.logger.info(e)
+                self.logger.info(traceback.format_exc())
             return None
 
         return {
@@ -198,12 +198,12 @@ class DataFeeder(BaseDataFeeder):
     ) -> Optional[dict]:
         """Filter out and process `setStake` and `setDelegation` txs."""
         if verbose:
-            print(f'Feeding block: {height}')
+            self.logger.info(f'Feeding block: {height}')
 
         block = self._get_block(height)
         if not block:
             if verbose:
-                print('--Block not found')
+                self.logger.info('--Block not found')
             return None
 
         try:
@@ -216,9 +216,9 @@ class DataFeeder(BaseDataFeeder):
 
         except Exception as e:
             if verbose:
-                print('ERROR in block data loading, skipped feeding')
-                print(e)
-                print(traceback.format_exc())
+                self.logger.info('ERROR in block data loading, skipped feeding')
+                self.logger.info(e)
+                self.logger.info(traceback.format_exc())
             return None
 
         try:
@@ -235,20 +235,20 @@ class DataFeeder(BaseDataFeeder):
                         set_stake_wallets[tx["from"]] = stake_value
                     except ValueError:
                         if verbose:
-                            print(f'ERROR in setStake transaction: {tx}')
+                            self.logger.info(f'ERROR in setStake transaction: {tx}')
 
                 elif tx['data']['method'] == 'setDelegation':
                     try:
                         set_delegation_wallets[tx["from"]] = tx['data']['params']['delegations']
                     except KeyError:
                         if verbose:
-                            print(f'ERROR in setDelegation transaction: {tx}')
+                            self.logger.info(f'ERROR in setDelegation transaction: {tx}')
 
         except Exception as e:
             if verbose:
-                print('ERROR in data pre-processing')
-                print(e)
-                print(traceback.format_exc())
+                self.logger.info('ERROR in data pre-processing')
+                self.logger.info(e)
+                self.logger.info(traceback.format_exc())
             return None
 
         return {

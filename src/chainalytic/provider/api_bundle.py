@@ -2,6 +2,7 @@ import traceback
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from chainalytic.common import config, zone_manager
+from chainalytic.common.util import get_child_logger
 
 from .collator import BaseCollator
 
@@ -27,6 +28,8 @@ class BaseApiBundle(object):
         self.working_dir = working_dir
         self.zone_id = zone_id
         self.collator = None
+
+        self.logger = get_child_logger('provider.api_bundle')
 
     def set_collator(self, collator: BaseCollator):
         self.collator = collator

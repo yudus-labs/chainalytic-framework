@@ -3,70 +3,76 @@ Exposed APIs
 
 api_id='put_block'
 api_params={
-    height: int,
-    data: Union,
-    transform_id: str,
+    'height': int,
+    'data': Union,
+    'transform_id': str,
 }
 
 api_id='get_block'
 api_params={
-    height: int,
-    transform_id: str,
+    'height': int,
+    'transform_id': str,
 }
 
 api_id='last_block_height'
 api_params={
-    transform_id: str,
+    'transform_id': str,
 }
 
 api_id='set_last_block_height'
 api_params={
-    height: int,
-    transform_id: str,
+    'height': int,
+    'transform_id': str,
 }
 
 api_id='set_latest_unstake_state'
 api_params={
-    unstake_state: dict,
-    transform_id: 'stake_history',
+    'unstake_state': dict,
+    'transform_id': 'stake_history',
 }
 
 api_id='latest_unstake_state'
 api_params={
-    transform_id: 'stake_history',
+    'transform_id': 'stake_history',
 }
 
 api_id='set_latest_stake_top100'
 api_params={
-    unstake_state: dict,
-    transform_id: 'stake_top100',
+    'unstake_state': dict,
+    'transform_id': 'stake_top100',
 }
 
 api_id='latest_stake_top100'
 api_params={
-    transform_id: 'stake_top100',
+    'transform_id': 'stake_top100',
 }
 
 api_id='set_recent_stake_wallets'
 api_params={
-    unstake_state: dict,
-    transform_id: 'recent_stake_wallets',
+    'unstake_state': dict,
+    'transform_id': 'recent_stake_wallets',
 }
 
 api_id='recent_stake_wallets'
 api_params={
-    transform_id: 'recent_stake_wallets',
+    'transform_id': 'recent_stake_wallets',
 }
 
 api_id='set_abstention_stake'
 api_params={
-    unstake_state: dict,
-    transform_id: 'abstention_stake',
+    'unstake_state': dict,
+    'transform_id': 'abstention_stake',
 }
 
 api_id='abstention_stake'
 api_params={
-    transform_id: 'abstention_stake',
+    'transform_id': 'abstention_stake',
+}
+
+api_id='funded_wallets'
+api_params={
+    'transform_id': 'funded_wallets',
+    'min_balance': float,
 }
 
 """

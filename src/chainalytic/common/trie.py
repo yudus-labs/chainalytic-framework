@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Set, Tuple
 import msgpack
 
 
+
 class Trie(list):
     """
     A simple trie (radix tree) for different kinds of state representation

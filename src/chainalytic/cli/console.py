@@ -12,6 +12,7 @@ from typing import Optional
 from jsonrpcclient.clients.http_client import HTTPClient
 
 from chainalytic.common import config, rpc_client, rpc_server
+from chainalytic.common.util import create_logger
 
 C = 'CONNECTED'
 D = 'DISCONNECTED'
@@ -51,7 +52,8 @@ class Console(object):
 
     def __init__(self, working_dir: Optional[str] = None):
         super(Console, self).__init__()
-        print('Starting Chainalytic Console...')
+        self.logger = create_logger('console')
+        self.logger.info('Starting Chainalytic Console...')
 
         self.working_dir = working_dir if working_dir else os.getcwd()
         self.cfg = None
@@ -66,9 +68,9 @@ class Console(object):
         if not cfg:
             raise Exception('Failed to init user config')
 
-        print('Generated user config')
-        print(f'--Chain registry: {cfg["chain_registry"]}')
-        print(f'--Setting: {cfg["setting"]}')
+        self.logger.info('Generated user config')
+        self.logger.info(f'--Chain registry: {cfg["chain_registry"]}')
+        self.logger.info(f'--Setting: {cfg["setting"]}')
 
     def load_config(self):
         if not config.check_user_config(self.working_dir):
@@ -118,7 +120,7 @@ class Console(object):
     def stop_services(self, service_id: Optional[str] = None):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
-        print('Stopping services...')
+        self.logger.info('Stopping services...')
         cleaned = 0
 
         if service_id:
@@ -136,11 +138,11 @@ class Console(object):
 
             if r['status']:
                 cleaned = 1
-                print(
+                self.logger.info(
                     f'----Stopped {self.sid[i]["name"]} service endpoint: {self.sid[i]["endpoint"]}'
                 )
 
-        print('Stopped all Chainalytic services' if cleaned else 'Nothing to stop')
+        self.logger.info('Stopped all Chainalytic services' if cleaned else 'Nothing to stop')
 
     def init_services(
         self, zone_id: str, service_id: Optional[str] = None, force_restart: Optional[bool] = 0
@@ -150,8 +152,8 @@ class Console(object):
         if force_restart:
             self.stop_services()
 
-        print('Initializing Chainalytic services...')
-        print()
+        self.logger.info('Initializing Chainalytic services...')
+        self.logger.info()
         python_exe = sys.executable
 
         if service_id:
@@ -189,12 +191,12 @@ class Console(object):
                     stderr=STDOUT,
                     start_new_session=True,
                 )
-                print(f'----Started {self.sid[i]["name"]} service: {" ".join(cmd)}')
-                print()
+                self.logger.info(f'----Started {self.sid[i]["name"]} service: {" ".join(cmd)}')
+                self.logger.info()
 
         if not all_sid:
-            print('No service initialized')
-        print()
+            self.logger.info('No service initialized')
+        self.logger.info()
 
     def monitor_stake_history(
         self,
@@ -404,7 +406,7 @@ class Console(object):
     def monitor(self, transform_id: str, refresh_time: float = 1.0):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
-        print('Starting aggregation monitor, waiting for Provider and Aggregator service...')
+        self.logger.info('Starting aggregation monitor, waiting for Provider and Aggregator service...')
         r1 = rpc_client.call_aiohttp(self.provider_endpoint, call_id='ping')['status']
         r2 = rpc_client.call(self.aggregator_endpoint, call_id='ping')['status']
         while not (r1 and r2):
@@ -426,7 +428,7 @@ class Console(object):
             curses.echo()
             curses.nocbreak()
             curses.endwin()
-            print('Cannot query official transform IDs, exited console')
+            self.logger.info('Cannot query official transform IDs, exited console')
             return
 
         if transform_id == 'stake_history' and transform_id in all_transforms:
@@ -437,4 +439,4 @@ class Console(object):
             curses.echo()
             curses.nocbreak()
             curses.endwin()
-            print(f'Transform "{transform_id}" not found, exited console')
+            self.logger.info(f'Transform "{transform_id}" not found, exited console')

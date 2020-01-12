@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from chainalytic.common import config, rpc_client
+from chainalytic.common.util import get_child_logger
 
 
 class BaseKernel(object):
@@ -26,6 +27,8 @@ class BaseKernel(object):
         self.transforms = {}
         self.chain_registry = config.get_chain_registry(working_dir)
         self.warehouse_endpoint = config.get_setting(working_dir)['warehouse_endpoint']
+
+        self.logger = get_child_logger('aggregator.kernel')
 
     def add_transform(self, transform: 'Transform'):
         self.transforms[transform.transform_id] = transform

@@ -4,6 +4,7 @@ from typing import Collection, Dict, List, Optional, Set, Tuple
 import plyvel
 
 from chainalytic.common import config, zone_manager
+from chainalytic.common.util import get_child_logger
 
 
 class BaseDataFeeder(object):
@@ -27,6 +28,8 @@ class BaseDataFeeder(object):
         self.zone_id = zone_id
         self.zone = zone_manager.get_zone(working_dir, zone_id)
         self.direct_db_access = self.zone['direct_db_access']
+
+        self.logger = get_child_logger('upstream.data_feeder')
 
     async def get_block(self, height: int, transform_id: str) -> Optional[Collection]:
         """Retrieve standard block data from chain
