@@ -236,6 +236,8 @@ _Return_
 
 Latest sorted list of wallets that hold a minimum amount of ICX
 
+The size of returned `wallets` is limited to top 10000 wallets despite of the `total` value
+
 _Params_
 [source]
 ----
@@ -251,6 +253,7 @@ _Return_
     'wallets': {
         <ADDRESS: str>: <BALANCE: float>,
         ...
-    }
+    },
+    'total': int  # The true total number of wallets satisfy minimum balance
 }
 ----

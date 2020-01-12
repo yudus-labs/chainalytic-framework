@@ -101,6 +101,7 @@ class Storage(BaseStorage):
     ABSTENTION_STAKE_HEIGHT_KEY = b'abstention_stake_height'
 
     FUNDED_WALLETS_HEIGHT_KEY = b'funded_wallets_height'
+    MAX_FUNDED_WALLETS_LIST = 10000
 
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
@@ -324,8 +325,11 @@ class Storage(BaseStorage):
                 wallets[addr.decode()] = float(balance)
 
         wallets = {k: v for k, v in sorted(wallets.items(), key=lambda item: item[1], reverse=1)}
+        total = len(wallets)
+        wallets = {k: wallets[k] for k in list(wallets)[: Storage.MAX_FUNDED_WALLETS_LIST]}
 
         height = db.get(Storage.FUNDED_WALLETS_HEIGHT_KEY)
         height = int(height.decode()) if height else None
 
-        return {'wallets': wallets, 'height': height}
+        return {'wallets': wallets, 'height': height, 'total': total}
+
