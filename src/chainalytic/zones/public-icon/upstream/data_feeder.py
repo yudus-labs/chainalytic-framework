@@ -10,7 +10,7 @@ import plyvel
 from iconsdk.icon_service import IconService
 from iconsdk.providers.http_provider import HTTPProvider
 
-from chainalytic.common import config, zone_manager
+from chainalytic.common import config, util, zone_manager
 from chainalytic.upstream.data_feeder import BaseDataFeeder
 
 BLOCK_HEIGHT_KEY = b'block_height_key'
@@ -73,12 +73,16 @@ class DataFeeder(BaseDataFeeder):
             data = self.chain_db.get(block_hash)
             try:
                 return json.loads(data)
-            except:
+            except Exception as e:
+                self.logger.error(f'_get_block(): Failed to read block from LevelDB: {height}')
+                self.logger.error(str(e))
                 return None
         else:
             try:
                 return self.icon_service.get_block(height)
-            except:
+            except Exception as e:
+                self.logger.error(f'_get_block(): icon_service failed to get_block: {height}')
+                self.logger.error(str(e))
                 return None
 
     @handle_client_failure
@@ -117,13 +121,19 @@ class DataFeeder(BaseDataFeeder):
                     tx_data = {}
                     tx_data['from'] = tx['from']
                     tx_data['to'] = tx['to']
-                    tx_data['value'] = int(tx['value'], 16) / 10 ** 18
+                    tx_data['value'] = (
+                        int(tx['value'], 16) / 10 ** 18
+                        if self.direct_db_access
+                        else tx['value'] / 10 ** 18
+                    )
                     fund_transfer_txs.append(tx_data)
                 except ValueError:
                     self.logger.error(f'ERROR in fund transfer transaction: {tx}')
 
         except Exception as e:
             self.logger.error('ERROR in data pre-processing')
+            self.logger.error('Source TX data:')
+            self.logger.error(util.pretty(tx))
             self.logger.error(e)
             self.logger.error(traceback.format_exc())
             return None
