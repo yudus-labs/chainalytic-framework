@@ -24,6 +24,7 @@ services:
         - <PATH_ON_YOUR_HOST_TO_CITIZEN_NODE>/data/mainnet/.score_data:/mainnet/.score_data
         - ./cfg:/chainalytic/.chainalytic/cfg
         - ./chainalytic_warehouse:/chainalytic/.chainalytic/chainalytic_warehouse
+        - ./log:/chainalytic/.chainalytic/log
     ports:
         - 5530:5530
     command: --zone-id public-icon
@@ -59,6 +60,14 @@ zones:
     # slow but would be helpful if you need realtime sync with citizen node.
     #
     direct_db_access: 1
+
+    # Comment/uncomment to choose which transforms to be built
+    transforms:
+      - stake_history
+      - stake_top100
+      - recent_stake_wallets
+      - abstention_stake
+      - funded_wallets
 ----
 
 ##### setting.yml, default is good

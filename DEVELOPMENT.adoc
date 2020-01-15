@@ -56,6 +56,7 @@ services:
         - .score_data_mirror:/mainnet/.score_data
         - ./cfg_dev:/chainalytic/.chainalytic/cfg
         - ./chainalytic_warehouse_dev:/chainalytic/.chainalytic/chainalytic_warehouse
+        - ./log_dev:/chainalytic/.chainalytic/log
     ports:
         - 5531:5531
     command: --zone-id public-icon
@@ -72,6 +73,14 @@ zones:
     chain_db_dir: '/mainnet/.storage/db_<HOST_IP>:7100_icon_dex'
     score_db_icondex_dir: '/mainnet/.score_data/db/icon_dex'
     direct_db_access: 1
+
+    # Comment/uncomment to choose which transforms to be built
+    transforms:
+      - stake_history
+      - stake_top100
+      - recent_stake_wallets
+      - abstention_stake
+      - funded_wallets
 ----
 
 ##### cfg_dev/setting.yml
