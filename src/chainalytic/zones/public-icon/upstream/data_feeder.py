@@ -95,7 +95,7 @@ class DataFeeder(BaseDataFeeder):
 
         block = self._get_block(height)
         if not block:
-            self.logger.warning(f'Block {height} not found')
+            self.logger.error(f'Block {height} not found')
             return None
 
         try:
@@ -127,8 +127,9 @@ class DataFeeder(BaseDataFeeder):
                         else tx['value'] / 10 ** 18
                     )
                     fund_transfer_txs.append(tx_data)
-                except ValueError:
-                    self.logger.error(f'ERROR in fund transfer transaction: {tx}')
+                except (ValueError, KeyError):
+                    self.logger.warning('There is issue in fund transfer transaction:')
+                    self.logger.warning(util.pretty(tx))
 
         except Exception as e:
             self.logger.error('ERROR in data pre-processing')
@@ -149,7 +150,7 @@ class DataFeeder(BaseDataFeeder):
 
         block = self._get_block(height)
         if not block:
-            self.logger.warning(f'Block {height} not found')
+            self.logger.error(f'Block {height} not found')
             return None
 
         try:
@@ -177,8 +178,9 @@ class DataFeeder(BaseDataFeeder):
                     try:
                         stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
                         set_stake_wallets[tx["from"]] = stake_value
-                    except ValueError:
-                        self.logger.error(f'ERROR in setStake transaction: {tx}')
+                    except (ValueError, KeyError):
+                        self.logger.warning('There is issue in setStake transaction:')
+                        self.logger.warning(util.pretty(tx))
 
         except Exception as e:
             self.logger.error('ERROR in data pre-processing')
@@ -198,7 +200,7 @@ class DataFeeder(BaseDataFeeder):
 
         block = self._get_block(height)
         if not block:
-            self.logger.warning(f'Block {height} not found')
+            self.logger.error(f'Block {height} not found')
             return None
 
         try:
@@ -227,14 +229,16 @@ class DataFeeder(BaseDataFeeder):
                     try:
                         stake_value = int(tx['data']['params']['value'], 16) / 10 ** 18
                         set_stake_wallets[tx["from"]] = stake_value
-                    except ValueError:
-                        self.logger.error(f'ERROR in setStake transaction: {tx}')
+                    except (ValueError, KeyError):
+                        self.logger.warning('There is issue in setStake transaction:')
+                        self.logger.warning(util.pretty(tx))
 
                 elif tx['data']['method'] == 'setDelegation':
                     try:
                         set_delegation_wallets[tx["from"]] = tx['data']['params']['delegations']
                     except KeyError:
-                        self.logger.error(f'ERROR in setDelegation transaction: {tx}')
+                        self.logger.warning('There is issue in setDelegation transaction:')
+                        self.logger.warning(util.pretty(tx))
 
         except Exception as e:
             self.logger.error('ERROR in data pre-processing')
