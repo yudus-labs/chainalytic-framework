@@ -78,6 +78,7 @@ stake_top100
 recent_stake_wallets
 abstention_stake
 funded_wallets
+passive_stake_wallets
 ----
 
 #### last_block_height
@@ -256,5 +257,31 @@ _Return_
         ...
     },
     'total': int  # The true total number of wallets satisfy minimum balance
+}
+----
+
+#### passive_stake_wallets
+
+Latest list of wallets that have been inactive since the last delegation activity, sorted by longest inactive duration in blocks
+
+The size of returned `wallets` is limited to top 1000 wallets despite of the `total` value
+
+_Params_
+[source]
+----
+"api_id": "passive_stake_wallets"
+
+"api_params": {"max_inactive_duration": <MAX_INACTIVE_DURATION: int>}
+----
+_Return_
+[source]
+----
+{
+    'height': int,
+    'wallets': {
+        <ADDRESS: str>: '{block_height_of_last_delegation}:{inactive_duration_in_blocks}',
+        ...
+    },
+    'total': int  # The true total number of wallets satisfy maximum inactive duration
 }
 ----

@@ -414,6 +414,7 @@ class Console(object):
         all_transforms_prev_last_block = {tid: 0 for tid in all_transform_ids}
         all_transforms_prev_time = {tid: 0 for tid in all_transform_ids}
         all_transforms_speed = {tid: 0 for tid in all_transform_ids}
+        latest_block_height = 0
 
         while 1:
             upstream_connected = rpc_client.call(self.upstream_endpoint, call_id='ping')['status']

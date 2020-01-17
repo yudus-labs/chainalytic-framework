@@ -1,3 +1,4 @@
+import traceback
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from chainalytic.aggregator.kernel import BaseKernel
@@ -18,6 +19,7 @@ class Kernel(BaseKernel):
             except Exception as e:
                 self.logger.error(f'ERROR while executing transform {transform_id}')
                 self.logger.error(str(e))
+                self.logger.error(traceback.format_exc())
         if not output:
             return 0
 
@@ -86,4 +88,14 @@ class Kernel(BaseKernel):
                 },
             )
             return r['status']
-
+        elif transform_id == 'passive_stake_wallets':
+            r = await rpc_client.call_async(
+                self.warehouse_endpoint,
+                call_id='api_call',
+                api_id='update_passive_stake_wallets',
+                api_params={
+                    'updated_wallets': output['misc']['updated_wallets'],
+                    'transform_id': transform_id,
+                },
+            )
+            return r['status']
