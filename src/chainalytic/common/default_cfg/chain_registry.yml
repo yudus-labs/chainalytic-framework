@@ -11,6 +11,7 @@ zones:
       - recent_stake_wallets
       - abstention_stake
       - funded_wallets
+      - passive_stake_wallets
   - zone_id: 'public-ethereum'
     zone_name: 'Public Ethereum mainnet'
     client_endpoint: ''

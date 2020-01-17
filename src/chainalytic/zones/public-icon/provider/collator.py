@@ -126,3 +126,25 @@ class Collator(BaseCollator):
             self.logger.error('Failed to request data from Warehouse')
             self.logger.error(r['data'])
             return None
+
+    ############################################
+    # For `passive_stake_wallets` transform only
+    #
+    async def passive_stake_wallets(
+        self, transform_id: str, max_inactive_duration: int
+    ) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='passive_stake_wallets',
+            api_params={
+                'transform_id': transform_id,
+                'max_inactive_duration': max_inactive_duration,
+            },
+        )
+        if r['status']:
+            return r['data']
+        else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
+            return None

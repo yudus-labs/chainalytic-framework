@@ -103,6 +103,9 @@ class Storage(BaseStorage):
     FUNDED_WALLETS_HEIGHT_KEY = b'funded_wallets_height'
     MAX_FUNDED_WALLETS_LIST = 10000
 
+    PASSIVE_STAKE_WALLETS_HEIGHT_KEY = b'passive_stake_wallets_height'
+    MAX_PASSIVE_STAKE_WALLETS_LIST = 1000
+
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
 
@@ -332,4 +335,48 @@ class Storage(BaseStorage):
         height = int(height.decode()) if height else None
 
         return {'wallets': wallets, 'height': height, 'total': total}
+
+    ############################################
+    # For `passive_stake_wallets` transform only
+    #
+    async def update_passive_stake_wallets(self, api_params: dict) -> bool:
+        updated_wallets: dict = api_params['updated_wallets']
+        transform_id: str = api_params['transform_id']
+
+        db_batch = self.transform_storage_dbs[transform_id].write_batch()
+        for addr, balance in updated_wallets['wallets'].items():
+            db_batch.put(addr.encode(), balance.encode())
+
+        db_batch.put(
+            Storage.PASSIVE_STAKE_WALLETS_HEIGHT_KEY, str(updated_wallets['height']).encode()
+        )
+        db_batch.write()
+
+        return 1
+
+    async def passive_stake_wallets(self, api_params: dict) -> dict:
+        max_inactive_duration: int = api_params['max_inactive_duration']
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+
+        latest_height = db.get(Storage.PASSIVE_STAKE_WALLETS_HEIGHT_KEY)
+        latest_height = int(latest_height.decode()) if latest_height else None
+
+        wallets = {}
+        for addr, height in db:
+            height = int(height)
+            if addr.startswith(b'hx') and latest_height - height <= max_inactive_duration:
+                wallets[addr.decode()] = f'{height}:{latest_height - height}'
+
+        wallets = {
+            k: v
+            for k, v in sorted(
+                wallets.items(), key=lambda item: int(item[1].split(':')[1]), reverse=1
+            )
+        }
+        total = len(wallets)
+        wallets = {k: wallets[k] for k in list(wallets)[: Storage.MAX_PASSIVE_STAKE_WALLETS_LIST]}
+
+        return {'wallets': wallets, 'height': latest_height, 'total': total}
 
