@@ -81,6 +81,27 @@ funded_wallets
 passive_stake_wallets
 ----
 
+List of calls
+
+<<last_block_height>>
+
+<<get_staking_info_last_block>>
+
+<<get_staking_info>>
+
+<<latest_unstake_state>>
+
+<<latest_stake_top100>>
+
+<<recent_stake_wallets>>
+
+<<abstention_stake>>
+
+<<funded_wallets>>
+
+<<passive_stake_wallets>>
+
+[[last_block_height]]
 #### last_block_height
 
 Ask for the last block height value of latest aggregated block of one specific transform
@@ -98,6 +119,7 @@ _Return_
 int
 ----
 
+[[get_staking_info_last_block]]
 #### get_staking_info_last_block
 
 Basic stake metrics of the chain at latest block
@@ -121,6 +143,7 @@ _Return_
 }
 ----
 
+[[get_staking_info]]
 #### get_staking_info
 
 Basic stake metrics of the chain at one specific block in the past
@@ -146,6 +169,7 @@ _Return_
 }
 ----
 
+[[latest_unstake_state]]
 #### latest_unstake_state
 
 List of wallets being in unlock period ( unstaking )
@@ -167,6 +191,7 @@ _Return_
 }
 ----
 
+[[latest_stake_top100]]
 #### latest_stake_top100
 
 Latest sorted list of top 100 staking wallets
@@ -188,6 +213,7 @@ _Return_
 }
 ----
 
+[[recent_stake_wallets]]
 #### recent_stake_wallets
 
 List of recently stake wallets, ordered by block height
@@ -211,6 +237,7 @@ _Return_
 }
 ----
 
+[[abstention_stake]]
 #### abstention_stake
 
 Latest sorted list of wallets that already staked but not voting all staked ICX
@@ -234,6 +261,7 @@ _Return_
 }
 ----
 
+[[funded_wallets]]
 #### funded_wallets
 
 Latest sorted list of wallets that hold a minimum amount of ICX
@@ -260,6 +288,7 @@ _Return_
 }
 ----
 
+[[passive_stake_wallets]]
 #### passive_stake_wallets
 
 Latest list of wallets that have been inactive since the last delegation activity, sorted by longest inactive duration in blocks
