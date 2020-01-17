@@ -263,6 +263,8 @@ class DataFeeder(BaseDataFeeder):
             return await self._get_block_stake_delegation_tx(height)
         elif transform_id == 'funded_wallets':
             return await self._get_block_fund_transfer_tx(height)
+        elif transform_id == 'passive_stake_wallets':
+            return await self._get_block_stake_delegation_tx(height)
 
     async def last_block_height(self) -> Optional[int]:
         """Get last block height from chain

@@ -59,3 +59,11 @@ class ApiBundle(BaseApiBundle):
         return await self.collator.funded_wallets(
             'funded_wallets', float(api_params['min_balance']) if 'min_balance' in api_params else 1
         )
+
+    async def passive_stake_wallets(self, api_params: dict) -> Optional[dict]:
+        return await self.collator.passive_stake_wallets(
+            'passive_stake_wallets',
+            int(api_params['max_inactive_duration'])
+            if 'max_inactive_duration' in api_params
+            else 1296000,  # One month
+        )

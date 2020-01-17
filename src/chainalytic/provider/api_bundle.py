@@ -44,9 +44,13 @@ class BaseApiBundle(object):
                 ret['result'] = await func(api_params)
                 ret['status'] = 1
             else:
+                self.logger.warning(f'API not found: {api_id}')
                 ret['status'] = -1
+                ret['result'] = f'API not found: {api_id}'
         except Exception as e:
             ret['status'] = 0
             ret['result'] = f'{str(e)}\n{traceback.format_exc()}'
+            self.logger.error(f'ERROR when calling API: {api_id}')
+            self.logger.error(f'{str(e)}\n{traceback.format_exc()}')
 
         return ret
