@@ -4,6 +4,7 @@ import os
 import sys
 import time
 
+import aiohttp_cors
 import websockets
 from aiohttp import web
 from jsonrpcserver import async_dispatch as dispatch
@@ -85,7 +86,9 @@ def _run_server(endpoint, working_dir, zone_id):
             return web.Response()
 
     app = web.Application()
-    app.router.add_post("/", handle)
+    cors = aiohttp_cors.setup(app, defaults={"*": aiohttp_cors.ResourceOptions()})
+    resource = cors.add(app.router.add_resource("/"))
+    cors.add(resource.add_route("POST", handle))
     web.run_app(app, port=port)
 
     _LOGGER.info('Exited Provider')

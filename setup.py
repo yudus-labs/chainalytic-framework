@@ -12,9 +12,10 @@ deps = {
         'jsonrpcclient[requests]',
         'websockets',
         'aiohttp',
+        'aiohttp_cors',
         'iconservice',
         'requests',
-        'iconsdk'
+        'iconsdk',
     ],
     'test': [
         'pytest',
