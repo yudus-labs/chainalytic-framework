@@ -26,10 +26,7 @@ Producer default endpoint: `http://localhost:5530`
 ----
 {
     'status': bool,
-    'data': {
-        'status': bool,
-        'result': Any
-    } or Error message
+    'result': Any
 }
 ----
 
@@ -50,15 +47,16 @@ Call `last_block_height` of transform `stake_history`
 }
 ----
 
-Result
+Response
 [source]
 ----
 {
-    'status': 1,
-    'data': {
-        'status': 1,
-        'result': 12000000
-    }
+    "jsonrpc": "2.0",
+    "result": {
+        "status": 1,
+        "result": 12000000
+    },
+    "id": 123
 }
 ----
 
@@ -66,7 +64,7 @@ Result
 
 _For convenience, API reference contains only_ `api_id` _and_ `api_params`
 
-_In response return, it covers only format of_ `response['data']['result']`
+_In response return, it covers only format of_ `response['result']['result']`
 
 ### Zone `public-icon`
 
