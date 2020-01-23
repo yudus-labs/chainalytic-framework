@@ -102,6 +102,13 @@ zones:
     chain_db_dir: 'path_to/data/mainnet/.storage/db_<YOUR_IP>:7100_icon_dex'
     score_db_icondex_dir: 'path_to/data/mainnet/.score_data/db/icon_dex'
     direct_db_access: 0 # Set to 1 for fast aggregation
+    transforms:
+      - stake_history
+      - stake_top100
+      - recent_stake_wallets
+      - abstention_stake
+      - funded_wallets
+      - passive_stake_wallets
 ----
 
 #### 1B. Basic usages

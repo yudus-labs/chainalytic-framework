@@ -68,6 +68,7 @@ zones:
       - recent_stake_wallets
       - abstention_stake
       - funded_wallets
+      - passive_stake_wallets
 ----
 
 ##### setting.yml, default is good
