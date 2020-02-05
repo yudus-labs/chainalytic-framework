@@ -4,22 +4,22 @@ from setuptools import setup, find_packages
 # All dependences
 deps = {
     'chainalytic': [
-        'ruamel.yaml',
-        'msgpack',
-        'plyvel',
-        'jsonrpcserver',
+        'ruamel.yaml==0.16.5',
+        'msgpack==0.6.2',
+        'plyvel==1.1.0',
+        'jsonrpcserver==4.1.2',
         'jsonrpcclient[websockets]',
         'jsonrpcclient[requests]',
-        'websockets',
-        'aiohttp',
-        'aiohttp_cors',
-        'iconservice',
-        'requests',
-        'iconsdk',
+        'websockets==8.1',
+        'aiohttp==3.6.2',
+        'aiohttp-cors==0.7.0',
+        'iconservice==1.6.0',
+        'requests==2.22.0',
+        'iconsdk==1.2.0',
     ],
     'test': [
         'pytest',
-        'plyvel',
+        'plyvel==1.1.0',
     ],
     'dev': [
         'python-language-server',
@@ -78,10 +78,11 @@ setup(
     },
 
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3.7',
+        'Operating System :: POSIX :: Linux'
     ],
 )
