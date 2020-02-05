@@ -24,13 +24,34 @@ def handle_client_failure(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
+            url = f"http://{args[0].client_endpoint}"
+            http_provider = HTTPProvider(url, 3)
             if args[0].icon_service is None:
-                args[0].icon_service = IconService(
-                    HTTPProvider(f"http://{args[0].client_endpoint}", 3)
-                )
-            return func(*args, **kwargs)
-        except Exception:
+                args[0].icon_service = IconService(http_provider)
+            if http_provider.is_connected():
+                return func(*args, **kwargs)
+            else:
+                args[0].logger.warning(f'Citizen node is not connected: {url}')
+                return None
+
+        except Exception as e:
             args[0].icon_service = None
+            args[0].logger.error('handle_client_failure(): Failed to setup icon_service')
+            args[0].logger.error(str(e))
+            return None
+
+    return wrapper
+
+
+def handle_unknown_failure(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            args[0].logger.error(f'handle_unknown_failure(): There is error while calling: {func}')
+            args[0].logger.error(str(e))
+            args[0].logger.error(traceback.format_exc())
             return None
 
     return wrapper
@@ -95,7 +116,7 @@ class DataFeeder(BaseDataFeeder):
 
         block = self._get_block(height)
         if not block:
-            self.logger.error(f'Block {height} not found')
+            self.logger.warning(f'Block {height} not found')
             return None
 
         try:
@@ -150,7 +171,7 @@ class DataFeeder(BaseDataFeeder):
 
         block = self._get_block(height)
         if not block:
-            self.logger.error(f'Block {height} not found')
+            self.logger.warning(f'Block {height} not found')
             return None
 
         try:
@@ -200,7 +221,7 @@ class DataFeeder(BaseDataFeeder):
 
         block = self._get_block(height)
         if not block:
-            self.logger.error(f'Block {height} not found')
+            self.logger.warning(f'Block {height} not found')
             return None
 
         try:
@@ -252,6 +273,7 @@ class DataFeeder(BaseDataFeeder):
             'total_supply': self._get_total_supply(),
         }
 
+    @handle_unknown_failure
     async def get_block(self, height: int, transform_id: str) -> Optional[dict]:
         if transform_id == 'stake_history':
             return await self._get_block_stake_tx(height)
@@ -266,6 +288,7 @@ class DataFeeder(BaseDataFeeder):
         elif transform_id == 'passive_stake_wallets':
             return await self._get_block_stake_delegation_tx(height)
 
+    @handle_unknown_failure
     async def last_block_height(self) -> Optional[int]:
         """Get last block height from chain
         """
