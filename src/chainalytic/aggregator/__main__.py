@@ -117,7 +117,7 @@ async def fetch_data():
                     )
                     _LOGGER.debug(f'--Executed block {next_block_height} successfully')
                 else:
-                    _LOGGER.debug(f'--Failed to fetch, trying again...')
+                    _LOGGER.warning(f'--Failed to fetch block {next_block_height}, trying again...')
             agg_time = round(time() - t1, 4)
             _LOGGER.info(f'--Aggregated block {next_block_height} in {agg_time}s')
 
@@ -132,6 +132,7 @@ async def fetch_data():
 def _run_server(endpoint, working_dir, zone_id):
     global _AGGREGATOR
     global _LOGGER
+    config.get_setting(working_dir)
     _LOGGER = create_logger('aggregator', zone_id)
     rpc_server.set_logger(_LOGGER)
 

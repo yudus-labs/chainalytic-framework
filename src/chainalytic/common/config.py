@@ -84,6 +84,8 @@ def get_setting(working_dir: str = get_working_dir()) -> Optional[Dict]:
         with open(user_setting_path) as f:
             yaml = YAML(typ='safe')
             data = yaml.load(f.read())
+        if 'log_level' in data:
+            os.environ['LOG_LEVEL'] = str(data['log_level'])
     except Exception:
         pass
     return data

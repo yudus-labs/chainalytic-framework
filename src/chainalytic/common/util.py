@@ -1,6 +1,7 @@
 import json
 import logging
 from pathlib import Path
+import os
 from chainalytic.common import config
 
 
@@ -8,7 +9,9 @@ def pretty(d: dict) -> str:
     return json.dumps(d, indent=2, sort_keys=1)
 
 
-def create_logger(logger_name: str, log_location: str = '', level: int = logging.WARNING):
+def create_logger(logger_name: str, log_location: str = '', level: int = None):
+    if not level:
+        level = int(os.environ['LOG_LEVEL']) if 'LOG_LEVEL' in os.environ else logging.WARNING
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
 

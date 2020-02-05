@@ -18,7 +18,7 @@ from pprint import pprint
 import websockets
 from jsonrpcserver import method
 
-from chainalytic.common import rpc_server
+from chainalytic.common import rpc_server, config
 from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 from chainalytic.common.util import create_logger
 
@@ -60,6 +60,7 @@ async def _call(call_id: str, **kwargs):
 def _run_server(endpoint, working_dir, zone_id):
     global _WAREHOUSE
     global _LOGGER
+    config.get_setting(working_dir)
     _LOGGER = create_logger('warehouse', zone_id)
     rpc_server.set_logger(_LOGGER)
 
