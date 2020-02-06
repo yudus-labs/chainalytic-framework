@@ -157,7 +157,11 @@ class Console(object):
         print('Stopped all Chainalytic services' if cleaned else 'Nothing to stop')
 
     def init_services(
-        self, zone_id: str, service_id: Optional[str] = None, force_restart: Optional[bool] = 0
+        self,
+        zone_id: str,
+        service_id: Optional[str] = None,
+        force_restart: Optional[bool] = 0,
+        always_ping: bool = True,
     ):
         assert self.is_endpoint_set, 'Service endpoints are not set, please load config first'
 
@@ -179,10 +183,12 @@ class Console(object):
         echo_pwd = ['echo', os.environ['SUDO_PWD']] if 'SUDO_PWD' in os.environ else []
 
         for i in all_sid:
-            if i == '3':
+            if i == '3' and always_ping:
                 pong = rpc_client.call_aiohttp(self.sid[i]['endpoint'], call_id='ping')['status']
-            else:
+            elif always_ping:
                 pong = rpc_client.call(self.sid[i]['endpoint'], call_id='ping')['status']
+            else:
+                pong = 0
             if not pong:
                 echo = subprocess.Popen(echo_pwd, stdout=PIPE) if echo_pwd else None
                 cmd = sudo + [

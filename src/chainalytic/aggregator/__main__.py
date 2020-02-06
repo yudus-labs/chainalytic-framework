@@ -11,6 +11,7 @@ from jsonrpcserver import method
 from chainalytic.common import config, rpc_client, rpc_server
 from chainalytic.common.rpc_server import EXIT_SERVICE, main_dispatcher, show_call_info
 from chainalytic.common.util import create_logger
+from chainalytic.cli.console import Console
 
 from . import Aggregator
 
@@ -118,6 +119,14 @@ async def fetch_data():
                     _LOGGER.debug(f'--Executed block {next_block_height} successfully')
                 else:
                     _LOGGER.warning(f'--Failed to fetch block {next_block_height}, trying again...')
+                    if not upstream_response['status']:
+                        console = Console(_AGGREGATOR.working_dir)
+                        console.load_config()
+                        console.init_services(
+                            zone_id=_AGGREGATOR.zone_id, service_id='0', always_ping=0
+                        )
+                        _LOGGER.warning('--Re-initialized Upstream service')
+
             agg_time = round(time() - t1, 4)
             _LOGGER.info(f'--Aggregated block {next_block_height} in {agg_time}s')
 
