@@ -100,14 +100,18 @@ class DataFeeder(BaseDataFeeder):
                 return None
         else:
             try:
-                return self.icon_service.get_block(height)
+                last_block = self._icon_service_get_last_block()
+                if height <= last_block:
+                    return self.icon_service.get_block(height)
+                else:
+                    return -1
             except Exception as e:
                 self.logger.error(f'_get_block(): icon_service failed to get_block: {height}')
                 self.logger.error(str(e))
                 return None
 
     @handle_client_failure
-    def _get_last_block(self):
+    def _icon_service_get_last_block(self):
         return self.icon_service.get_block('latest')['height']
 
     async def _get_block_fund_transfer_tx(self, height: int) -> Optional[dict]:
@@ -115,9 +119,11 @@ class DataFeeder(BaseDataFeeder):
         self.logger.debug(f'Feeding block: {height}')
 
         block = self._get_block(height)
-        if not block:
+        if block is None:
             self.logger.warning(f'Block {height} not found')
             return None
+        elif block == -1:
+            return -1
 
         try:
             if height < V3_BLOCK_HEIGHT or not self.direct_db_access:
@@ -170,9 +176,11 @@ class DataFeeder(BaseDataFeeder):
         self.logger.debug(f'Feeding block: {height}')
 
         block = self._get_block(height)
-        if not block:
+        if block is None:
             self.logger.warning(f'Block {height} not found')
             return None
+        elif block == -1:
+            return -1
 
         try:
             if height < V3_BLOCK_HEIGHT or not self.direct_db_access:
@@ -220,9 +228,11 @@ class DataFeeder(BaseDataFeeder):
         self.logger.debug(f'Feeding block: {height}')
 
         block = self._get_block(height)
-        if not block:
+        if block is None:
             self.logger.warning(f'Block {height} not found')
             return None
+        elif block == -1:
+            return -1
 
         try:
             if height < V3_BLOCK_HEIGHT or not self.direct_db_access:
@@ -300,4 +310,4 @@ class DataFeeder(BaseDataFeeder):
                 block = json.loads(data)
                 return int(block['height'], 16)
         else:
-            return self._get_last_block()
+            return self._icon_service_get_last_block()

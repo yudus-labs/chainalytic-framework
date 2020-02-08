@@ -107,7 +107,7 @@ async def fetch_data():
                     height=next_block_height,
                     transform_id=tid,
                 )
-                if upstream_response['status'] and upstream_response['data'] is not None:
+                if upstream_response['status'] and upstream_response['data'] not in [None, -1]:
                     _LOGGER.debug(f'--Fetched data successfully')
                     _LOGGER.debug(f'--Next block height: {next_block_height}')
                     _LOGGER.debug(f'--Preparing to execute next block...')
@@ -118,8 +118,12 @@ async def fetch_data():
                     )
                     _LOGGER.debug(f'--Executed block {next_block_height} successfully')
                 else:
-                    _LOGGER.warning(f'--Failed to fetch block {next_block_height}, trying again...')
+                    if upstream_response['data'] is None:
+                        _LOGGER.warning(
+                            f'--Failed to fetch block {next_block_height}, trying again...'
+                        )
                     if not upstream_response['status']:
+                        _LOGGER.warning(f'--Upstream response error: {upstream_response["data"]}')
                         console = Console(_AGGREGATOR.working_dir)
                         console.load_config()
                         console.init_services(
