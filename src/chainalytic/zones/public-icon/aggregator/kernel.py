@@ -99,3 +99,14 @@ class Kernel(BaseKernel):
                 },
             )
             return r['status']
+        elif transform_id == 'contract_history':
+            r = await rpc_client.call_async(
+                self.warehouse_endpoint,
+                call_id='api_call',
+                api_id='update_contract_history',
+                api_params={
+                    'updated_contract_state': output['misc']['updated_contract_state'],
+                    'transform_id': transform_id,
+                },
+            )
+            return r['status']

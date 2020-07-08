@@ -106,6 +106,8 @@ class Storage(BaseStorage):
     PASSIVE_STAKE_WALLETS_HEIGHT_KEY = b'passive_stake_wallets_height'
     MAX_PASSIVE_STAKE_WALLETS_LIST = 1000
 
+    CONTRACT_HISTORY_HEIGHT_KEY = b'contract_history_height'
+
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
 
@@ -379,4 +381,96 @@ class Storage(BaseStorage):
         wallets = {k: wallets[k] for k in list(wallets)[: Storage.MAX_PASSIVE_STAKE_WALLETS_LIST]}
 
         return {'wallets': wallets, 'height': latest_height, 'total': total}
+
+    ############################################
+    # For `contract_history` transform only
+    #
+    async def update_contract_history(self, api_params: dict) -> bool:
+        updated_contract_state: dict = api_params['updated_contract_state']
+        transform_id: str = api_params['transform_id']
+
+        db_batch = self.transform_storage_dbs[transform_id].write_batch()
+        for addr in updated_contract_state:
+            db_batch.put(addr.encode(), json.dumps(updated_contract_state[addr]['stats']).encode())
+            for i in updated_contract_state[addr]['tx']:
+                db_batch.put(
+                    f'{addr}|tx|{i}'.encode(),
+                    json.dumps(updated_contract_state[addr]['tx']).encode(),
+                )
+            for i in updated_contract_state[addr]['internal_tx']:
+                db_batch.put(
+                    f'{addr}|internal_tx|{i}'.encode(),
+                    json.dumps(updated_contract_state[addr]['tx']).encode(),
+                )
+
+        db_batch.put(
+            Storage.CONTRACT_HISTORY_HEIGHT_KEY, str(updated_contract_state['height']).encode()
+        )
+
+        db_batch.write()
+
+        return 1
+
+    async def contract_transaction(self, api_params: dict) -> dict:
+        address: str = api_params['address']
+        size: int = api_params['size']  # Number of latest transactions
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+
+        height = db.get(Storage.CONTRACT_HISTORY_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
+
+        stats = db.get(address.encode())
+        if stats:
+            stats = json.loads(stats)
+        else:
+            return {'transactions': [], 'height': height}
+
+        latest_tx_id = stats['tx_count']
+
+        txs = [
+            json.loads(db.get(f'{address}|tx|{i}'.encode()))
+            for i in range(latest_tx_id - size, latest_tx_id + 1)
+        ]
+
+        return {'transactions': txs, 'height': height}
+
+    async def contract_internal_transaction(self, api_params: dict) -> dict:
+        address: str = api_params['address']
+        size: int = api_params['size']  # Number of latest transactions
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+
+        height = db.get(Storage.CONTRACT_HISTORY_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
+
+        stats = db.get(address.encode())
+        if stats:
+            stats = json.loads(stats)
+        else:
+            return {'internal_transaction': [], 'height': height}
+
+        latest_tx_id = stats['internal_tx_count']
+
+        txs = [
+            json.loads(db.get(f'{address}|internal_tx|{i}'.encode()))
+            for i in range(latest_tx_id - size, latest_tx_id + 1)
+        ]
+
+        return {'internal_transaction': txs, 'height': height}
+
+    async def contract_stats(self, api_params: dict) -> dict:
+        address: str = api_params['address']
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+
+        height = db.get(Storage.CONTRACT_HISTORY_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
+
+        stats = db.get(address.encode())
+
+        return {'stats': json.loads(stats) if stats else None, 'height': height}
 

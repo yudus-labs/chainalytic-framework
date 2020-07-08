@@ -111,6 +111,37 @@ class DataFeeder(BaseDataFeeder):
                 return None
 
     @handle_client_failure
+    def _get_tx_result(self, tx_hash: str) -> Optional[Dict]:
+        if self.direct_db_access:
+            try:
+                tx_detail = self.chain_db.get(tx_hash.encode())
+
+                if not tx_detail:
+                    return None
+                else:
+                    tx_detail = json.loads(tx_detail)
+                    return tx_detail['result'] if 'result' in tx_detail else None
+
+            except Exception as e:
+                self.logger.error(f'_get_tx_result(): Failed to read Tx from LevelDB: {tx_hash}')
+                self.logger.error(str(e))
+                return None
+        else:
+            try:
+                tx_detail = self.icon_service.get_transaction(tx_hash)
+                if not tx_detail:
+                    return None
+                else:
+                    return tx_detail['result'] if 'result' in tx_detail else None
+
+            except Exception as e:
+                self.logger.error(
+                    f'_get_tx_result(): icon_service failed to get_transaction: {tx_hash}'
+                )
+                self.logger.error(str(e))
+                return None
+
+    @handle_client_failure
     def _icon_service_get_last_block(self):
         return self.icon_service.get_block('latest')['height']
 
@@ -283,6 +314,75 @@ class DataFeeder(BaseDataFeeder):
             'total_supply': self._get_total_supply(),
         }
 
+    async def _get_block_contract_tx(self, height: int) -> Optional[dict]:
+        """Filter out contract txs."""
+        self.logger.debug(f'Feeding block: {height}')
+
+        block = self._get_block(height)
+        if block is None:
+            self.logger.warning(f'Block {height} not found')
+            return None
+        elif block == -1:
+            return -1
+
+        try:
+            if height < V3_BLOCK_HEIGHT or not self.direct_db_access:
+                txs = block['confirmed_transaction_list']
+                timestamp = block['time_stamp']
+            else:
+                txs = block['transactions']
+                timestamp = int(block['timestamp'], 16)
+
+        except Exception as e:
+            self.logger.error('ERROR in block data loading, skipped feeding')
+            self.logger.error(e)
+            self.logger.error(traceback.format_exc())
+            return None
+
+        try:
+            contract_txs = []
+            for tx in txs:
+                if 'to' in tx:
+                    if tx['to'].startswith('cx'):
+                        tx_data = {
+                            'contract_address': tx['to'],
+                            'timestamp': int(tx['timestamp'], 16),
+                            'hash': tx['txHash'],
+                            'from': tx['from'],
+                            'value': int(tx['value'], 16) / 10 ** 18 if 'value' in tx else None,
+                            'fee': None,
+                            'internal_tx_target': None,
+                            'internal_tx_value': None,
+                        }
+
+                        tx_result = self._get_tx_result(tx['txHash'])
+                        tx_data['fee'] = (
+                            int(tx_result['stepPrice'], 16)
+                            * int(tx_result['stepUsed'], 16)
+                            / 10 ** 18
+                        )
+
+                        for event in tx_result['eventLogs']:
+                            if event['indexed'][0].startswith('ICXTransfer'):
+                                tx_data['internal_tx_target'] = event['indexed'][2]
+                                tx_data['internal_tx_value'] = (
+                                    int(event['indexed'][3], 16) / 10 ** 18
+                                )
+
+                        contract_txs.append(tx_data)
+
+        except Exception as e:
+            self.logger.error('ERROR in data pre-processing')
+            self.logger.error(e)
+            self.logger.error(traceback.format_exc())
+            return None
+
+        return {
+            'data': contract_txs,
+            'timestamp': timestamp,
+            'total_supply': self._get_total_supply(),
+        }
+
     @handle_unknown_failure
     async def get_block(self, height: int, transform_id: str) -> Optional[dict]:
         if transform_id == 'stake_history':
@@ -297,6 +397,8 @@ class DataFeeder(BaseDataFeeder):
             return await self._get_block_fund_transfer_tx(height)
         elif transform_id == 'passive_stake_wallets':
             return await self._get_block_stake_delegation_tx(height)
+        elif transform_id == 'contract_history':
+            return await self._get_block_contract_tx(height)
 
     @handle_unknown_failure
     async def last_block_height(self) -> Optional[int]:
