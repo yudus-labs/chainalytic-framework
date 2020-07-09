@@ -26,9 +26,12 @@ def handle_client_failure(func):
         try:
             url = f"http://{args[0].client_endpoint}"
             http_provider = HTTPProvider(url, 3)
-            if args[0].icon_service is None:
-                args[0].icon_service = IconService(http_provider)
-            if http_provider.is_connected():
+            
+            if args[0].direct_db_access:
+                return func(*args, **kwargs)
+            elif http_provider.is_connected():
+                if args[0].icon_service is None:
+                    args[0].icon_service = IconService(http_provider)
                 return func(*args, **kwargs)
             else:
                 args[0].logger.warning(f'Citizen node is not connected: {url}')

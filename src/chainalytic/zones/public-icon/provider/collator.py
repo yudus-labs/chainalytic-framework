@@ -148,3 +148,67 @@ class Collator(BaseCollator):
             self.logger.error('Failed to request data from Warehouse')
             self.logger.error(r['data'])
             return None
+
+    #######################################
+    # For `contract_history` transform only
+    #
+    async def contract_transaction(
+        self, transform_id: str, address: str, size: int
+    ) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='contract_transaction',
+            api_params={'transform_id': transform_id, 'address': address, 'size': size},
+        )
+        if r['status']:
+            return r['data']
+        else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
+            return None
+
+    async def contract_internal_transaction(
+        self, transform_id: str, address: str, size: int
+    ) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='contract_internal_transaction',
+            api_params={'transform_id': transform_id, 'address': address, 'size': size},
+        )
+        if r['status']:
+            return r['data']
+        else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
+            return None
+
+    async def contract_stats(self, transform_id: str, address: str) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='contract_stats',
+            api_params={'transform_id': transform_id, 'address': address},
+        )
+        if r['status']:
+            return r['data']
+        else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
+            return None
+
+    async def contract_list(self, transform_id: str) -> Optional[dict]:
+        r = await rpc_client.call_async(
+            self.warehouse_endpoint,
+            call_id='api_call',
+            api_id='contract_list',
+            api_params={'transform_id': transform_id},
+        )
+        if r['status']:
+            return r['data']
+        else:
+            self.logger.error('Failed to request data from Warehouse')
+            self.logger.error(r['data'])
+            return None
+

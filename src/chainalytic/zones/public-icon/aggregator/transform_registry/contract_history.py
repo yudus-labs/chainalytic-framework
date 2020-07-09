@@ -12,6 +12,8 @@ from chainalytic.common import rpc_client, trie
 
 
 class Transform(BaseTransform):
+    START_BLOCK_HEIGHT = 19452235
+
     CONTRACT_LIST_KEY = b'contract_list'
     TX_KEY = b'tx'
     INTERNAL_TX_KEY = b'internal_tx'
@@ -43,33 +45,33 @@ class Transform(BaseTransform):
         # #################################################
 
         contract_txs = input_data['data']
-        updated_contract_state = {}
+        updated_contracts = {}
 
         for tx in contract_txs:
             addr = tx['contract_address']
-            if addr not in updated_contract_state:
-                updated_contract_state[addr] = {
+            if addr not in updated_contracts:
+                updated_contracts[addr] = {
                     'stats': {},
                     'tx': {},
                     'internal_tx': {},
                 }
 
-            if not updated_contract_state[addr]['stats']:
-                updated_contract_state[addr]['stats'] = cache_db.get(addr.encode())
-            if not updated_contract_state[addr]['stats']:
-                updated_contract_state[addr]['stats'] = {
-                    'tx_volume': 0,
-                    'tx_count': 0,
-                    'internal_tx_volume': 0,
-                    'internal_tx_count': 0,
-                }
-            else:
-                updated_contract_state[addr]['stats'] = json.loads(updated_contract_state[addr]['stats'])
+            if not updated_contracts[addr]['stats']:
+                updated_contracts[addr]['stats'] = cache_db.get(addr.encode())
+                if not updated_contracts[addr]['stats']:
+                    updated_contracts[addr]['stats'] = {
+                        'tx_volume': 0,
+                        'tx_count': 0,
+                        'internal_tx_volume': 0,
+                        'internal_tx_count': 0,
+                    }
+                else:
+                    updated_contracts[addr]['stats'] = json.loads(updated_contracts[addr]['stats'])
 
             if tx['internal_tx_target']:
-                updated_contract_state[addr]['stats']['internal_tx_count'] += 1
-                next_tx_id = updated_contract_state[addr]['stats']['internal_tx_count']
-                updated_contract_state[addr]['internal_tx'][f'{next_tx_id}'] = {
+                updated_contracts[addr]['stats']['internal_tx_count'] += 1
+                next_tx_id = updated_contracts[addr]['stats']['internal_tx_count']
+                updated_contracts[addr]['internal_tx'][f'{next_tx_id}'] = {
                     'height': height,
                     'timestamp': tx['timestamp'],
                     'hash': tx['hash'],
@@ -78,11 +80,12 @@ class Transform(BaseTransform):
                     'internal_tx_target': tx['internal_tx_target'],
                     'internal_tx_value': tx['internal_tx_value'],
                 }
-                updated_contract_state[addr]['stats']['internal_tx_volume'] += tx['internal_tx_value']
+                if tx['internal_tx_value']:
+                    updated_contracts[addr]['stats']['internal_tx_volume'] += tx['internal_tx_value']
             else:
-                updated_contract_state[addr]['stats']['tx_count'] += 1
-                next_tx_id = updated_contract_state[addr]['stats']['tx_count']
-                updated_contract_state[addr]['tx'][f'{next_tx_id}'] = {
+                updated_contracts[addr]['stats']['tx_count'] += 1
+                next_tx_id = updated_contracts[addr]['stats']['tx_count']
+                updated_contracts[addr]['tx'][f'{next_tx_id}'] = {
                     'height': height,
                     'timestamp': tx['timestamp'],
                     'hash': tx['hash'],
@@ -90,16 +93,18 @@ class Transform(BaseTransform):
                     'value': tx['value'],
                     'fee': tx['fee'],
                 }
-                updated_contract_state[addr]['stats']['tx_volume'] += tx['value']
+                if tx['value']:
+                    updated_contracts[addr]['stats']['tx_volume'] += tx['value']
 
-            cache_db_batch.put(
-                addr.encode(), json.dumps(updated_contract_state[addr]['stats']).encode()
-            )
+            cache_db_batch.put(addr.encode(), json.dumps(updated_contracts[addr]['stats']).encode())
 
+        cache_db_batch.put(Transform.LAST_STATE_HEIGHT_KEY, str(height).encode())
         cache_db_batch.write()
 
         return {
             'height': height,
             'data': {},
-            'misc': {'updated_contract_state': updated_contract_state},
+            'misc': {
+                'updated_contract_state': {'updated_contracts': updated_contracts, 'height': height}
+            },
         }

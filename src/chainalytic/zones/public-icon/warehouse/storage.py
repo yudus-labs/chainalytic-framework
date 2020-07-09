@@ -107,6 +107,7 @@ class Storage(BaseStorage):
     MAX_PASSIVE_STAKE_WALLETS_LIST = 1000
 
     CONTRACT_HISTORY_HEIGHT_KEY = b'contract_history_height'
+    CONTRACT_LIST_KEY = b'contract_list'
 
     def __init__(self, working_dir: str, zone_id: str):
         super(Storage, self).__init__(working_dir, zone_id)
@@ -382,26 +383,40 @@ class Storage(BaseStorage):
 
         return {'wallets': wallets, 'height': latest_height, 'total': total}
 
-    ############################################
+    #######################################
     # For `contract_history` transform only
     #
     async def update_contract_history(self, api_params: dict) -> bool:
         updated_contract_state: dict = api_params['updated_contract_state']
         transform_id: str = api_params['transform_id']
 
+        updated_contracts = updated_contract_state['updated_contracts']
+
+        db = self.transform_storage_dbs[transform_id]
         db_batch = self.transform_storage_dbs[transform_id].write_batch()
-        for addr in updated_contract_state:
-            db_batch.put(addr.encode(), json.dumps(updated_contract_state[addr]['stats']).encode())
-            for i in updated_contract_state[addr]['tx']:
+
+        contract_list = db.get(Storage.CONTRACT_LIST_KEY)
+        if contract_list:
+            contract_list = json.loads(contract_list)
+        else:
+            contract_list = []
+
+        for addr in updated_contracts:
+            if addr not in contract_list:
+                contract_list.append(addr)
+
+            db_batch.put(addr.encode(), json.dumps(updated_contracts[addr]['stats']).encode())
+            for i in updated_contracts[addr]['tx']:
                 db_batch.put(
-                    f'{addr}|tx|{i}'.encode(),
-                    json.dumps(updated_contract_state[addr]['tx']).encode(),
+                    f'{addr}|tx|{i}'.encode(), json.dumps(updated_contracts[addr]['tx']).encode(),
                 )
-            for i in updated_contract_state[addr]['internal_tx']:
+            for i in updated_contracts[addr]['internal_tx']:
                 db_batch.put(
                     f'{addr}|internal_tx|{i}'.encode(),
-                    json.dumps(updated_contract_state[addr]['tx']).encode(),
+                    json.dumps(updated_contracts[addr]['tx']).encode(),
                 )
+
+        db_batch.put(Storage.CONTRACT_LIST_KEY, json.dumps(contract_list).encode())
 
         db_batch.put(
             Storage.CONTRACT_HISTORY_HEIGHT_KEY, str(updated_contract_state['height']).encode()
@@ -473,4 +488,19 @@ class Storage(BaseStorage):
         stats = db.get(address.encode())
 
         return {'stats': json.loads(stats) if stats else None, 'height': height}
+
+    async def contract_list(self, api_params: dict) -> dict:
+        transform_id: str = api_params['transform_id']
+
+        db = self.transform_storage_dbs[transform_id]
+
+        height = db.get(Storage.CONTRACT_HISTORY_HEIGHT_KEY)
+        height = int(height.decode()) if height else None
+
+        contract_list = db.get(Storage.CONTRACT_LIST_KEY)
+
+        return {
+            'contract_list': json.loads(contract_list) if contract_list else None,
+            'height': height,
+        }
 

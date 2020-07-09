@@ -67,3 +67,19 @@ class ApiBundle(BaseApiBundle):
             if 'max_inactive_duration' in api_params
             else 1296000,  # One month
         )
+
+    async def contract_transaction(self, api_params: dict) -> Optional[dict]:
+        return await self.collator.contract_transaction(
+            'contract_history', api_params['address'], int(api_params['size'])
+        )
+
+    async def contract_internal_transaction(self, api_params: dict) -> Optional[dict]:
+        return await self.collator.contract_internal_transaction(
+            'contract_history', api_params['address'], int(api_params['size'])
+        )
+
+    async def contract_stats(self, api_params: dict) -> Optional[dict]:
+        return await self.collator.contract_stats('contract_history', api_params['address'])
+
+    async def contract_list(self, api_params: dict) -> Optional[dict]:
+        return await self.collator.contract_list('contract_history')
