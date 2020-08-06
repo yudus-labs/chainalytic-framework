@@ -1,5 +1,7 @@
 # Chainalytic Framework
 
+NOTE: *THIS IS DEPRECATED*, for a better version, please look at https://github.com/yudus-lab/chainalytic-icon
+
 Modular framework for blockchain time-series data and arbitrary chain-state derivation/aggregation, which help to generate more insights of generic blockchains.
 
 link:INTRO.adoc[Detailed introduction and the story of Chainalytic]
